@@ -11,25 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Generate token to read from source repo # see: https://github.com/tibdex/github-app-token
-        id: generate_token
-        # https://github.com/tibdex/github-app-token
-        uses: tibdex/github-app-token@v2
-        with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.PRIVATE_KEY }}
-
-      - name: Checkout
-        # https://github.com/actions/checkout#usage
-        uses: actions/checkout@v4
-        with:
-          # submodules: true
-          token: ${{ steps.generate_token.outputs.token }}
-
       - name: actions-template-sync
         uses: AndreasAugustin/actions-template-sync@v2
         with:
-          github_token: ${{ steps.generate_token.outputs.token }}
+          github_token: ${{ secrets.pattoken }}
           source_repo_path: sourabhmandal/nextjs_zod_drizzle_fetch_template
           upstream_branch: main # defaults to main
           pr_labels: template_sync,latest # defaults to template_sync
