@@ -18,7 +18,7 @@ jobs:
       - name: actions-template-sync
         uses: AndreasAugustin/actions-template-sync@v2
         with:
-          github_token: ${{ secrets.pattoken }}
+          github_token: ${{ secrets.PAT_TOKEN }}
           source_repo_path: sourabhmandal/nextjs_zod_drizzle_fetch_template
           upstream_branch: main # defaults to main
           pr_labels: template_sync,latest # defaults to template_sync
