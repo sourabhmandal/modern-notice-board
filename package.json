@@ -19,7 +19,7 @@
     "@mui/material": "^5.16.5",
     "@mui/material-nextjs": "^5.16.4",
     "@ts-rest/core": "^3.47.0",
-    "@ts-rest/open-api": "^3.45.2",
+    "@ts-rest/open-api": "^3.49.2",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.32.1",
     "drizzle-zod": "^0.5.1",
