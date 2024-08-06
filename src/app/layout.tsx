@@ -1,6 +1,6 @@
 import { theme } from "@/app/theme";
 import { ReactQueryClientProvider } from "@/components";
-import { ThemeProvider } from "@mui/material";
+import { CssBaseline, ThemeProvider } from "@mui/material";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
@@ -15,10 +15,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  console.log("NEXTJS CUSTOM TEMPLATE :: BY SOURABH MANDAL");
   return (
     <html lang="en">
       <body className={GeistSans.className}>
+        <CssBaseline />
         <ReactQueryClientProvider>
           <AppRouterCacheProvider options={{ enableCssLayer: true }}>
             <ThemeProvider theme={theme}>{children}</ThemeProvider>

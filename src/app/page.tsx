@@ -38,6 +38,7 @@ export default function Home() {
         <CreateUserForm />
         <Typography variant="body1">{JSON.stringify(pingPostData)}</Typography>
       </Box>
+      <Box>Carousel Images here</Box>;
     </main>
   );
 }
