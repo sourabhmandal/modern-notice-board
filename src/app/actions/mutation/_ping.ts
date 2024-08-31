@@ -1,6 +1,6 @@
 "use server";
 import { initializeDb } from "@/server";
-import { ICreateUser, IUser, users } from "@/server/model/users";
+import { ICreateUser, IUser, users } from "@/server/model/auth";
 
 export const postPing = async (
   data: ICreateUser

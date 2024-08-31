@@ -1,5 +1,6 @@
 import { env } from "@/server/env";
 import { defineConfig } from "drizzle-kit";
+
 export default defineConfig({
   schema: "./src/server/model/index.ts",
   dialect: "postgresql",
@@ -7,6 +8,7 @@ export default defineConfig({
     prefix: "index",
   },
   dbCredentials: {
-    url: env.PG_DATABASE_URL,
+    url: env.PG_ADMIN_DATABASE_URL,
   },
+  out: "./drizzle",
 });

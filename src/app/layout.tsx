@@ -1,6 +1,10 @@
-import { theme } from "@/app/theme";
-import { ReactQueryClientProvider } from "@/components";
-import { CssBaseline, ThemeProvider } from "@mui/material";
+import {
+  ReactQueryClientProvider,
+  SWRProvider,
+  ThemeModeProvider,
+} from "@/components";
+import { SessionProvider } from "next-auth/react";
+
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
@@ -18,11 +22,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={GeistSans.className}>
-        <CssBaseline />
         <ReactQueryClientProvider>
-          <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-            <ThemeProvider theme={theme}>{children}</ThemeProvider>
-          </AppRouterCacheProvider>
+          <SWRProvider>
+            <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+              <ThemeModeProvider>
+                <SessionProvider>{children}</SessionProvider>
+              </ThemeModeProvider>
+            </AppRouterCacheProvider>
+          </SWRProvider>
         </ReactQueryClientProvider>
       </body>
     </html>

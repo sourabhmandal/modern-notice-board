@@ -14,7 +14,7 @@ bun dev
 
 ## TODO
 
-[X] Add material UI
-[ ] Add Drizzle
-[ ] Add zod and api type-safety
-[X] Add OpenAPI
+- [X] Add material UI
+- [ ] Add Drizzle
+- [ ] Add zod and api type-safety
+- [X] Add OpenAPI

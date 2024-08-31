@@ -1,44 +1,38 @@
-"use client";
-import { CreateUserForm } from "@/components";
-import { IUser } from "@/server/model/users";
-import { Box, Typography } from "@mui/material";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { postPing } from "./actions/mutation/_ping";
-import { getPing } from "./actions/query/_ping";
+import {
+  LandingPageAppBar,
+  LandingPageFAQ,
+  LandingPageFooter,
+  LandingPageHighlights,
+  LandingPageLogoCollection,
+  LandingPagePricing,
+  LandingPageTestimonials,
+  LandinPageFeatures,
+  LandinPageHero,
+  ToggleMode,
+} from "@/components";
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
 
-export default function Home() {
-  const { data: pingData } = useQuery({
-    queryKey: ["get-ping"],
-    queryFn: async (): Promise<IUser | undefined> => getPing(),
-    refetchOnMount: false,
-  });
-
-  const {
-    data: pingPostData,
-    isPending: pingPostIsPending,
-    isSuccess: pingPostIsSuccess,
-  } = useMutation({
-    mutationKey: ["post-ping"],
-    mutationFn: postPing,
-  });
-
+export default function LandingPage() {
   return (
-    <main>
-      <Box>
-        <Typography variant="h5">
-          GET <code>/api/ping</code>
-        </Typography>
-        <Typography variant="body1">{JSON.stringify(pingData)}</Typography>
+    <Box>
+      <LandingPageAppBar />
+      <LandinPageHero />
+      <Box sx={{ bgcolor: "background.default" }}>
+        <LandingPageLogoCollection />
+        <LandinPageFeatures />
+        <Divider />
+        <LandingPageTestimonials />
+        <Divider />
+        <LandingPageHighlights />
+        <Divider />
+        <LandingPagePricing />
+        <Divider />
+        <LandingPageFAQ />
+        <Divider />
+        <LandingPageFooter />
       </Box>
-      <br />
-      <Box>
-        <Typography variant="h5">
-          POST <code>/api/ping</code>
-        </Typography>
-        <CreateUserForm />
-        <Typography variant="body1">{JSON.stringify(pingPostData)}</Typography>
-      </Box>
-      <Box>Carousel Images here</Box>;
-    </main>
+      <ToggleMode />
+    </Box>
   );
 }

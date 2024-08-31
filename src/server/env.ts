@@ -12,6 +12,15 @@ const envSchema = z.object({
       (str) => str.includes("postgresql://"),
       "please provide a valid url"
     ),
+  PG_ADMIN_DATABASE_URL: z
+    .string()
+    .url()
+    .trim()
+    .min(1)
+    .refine(
+      (str) => str.includes("postgresql://"),
+      "please provide a valid url"
+    ),
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
@@ -34,6 +43,11 @@ const envSchema = z.object({
       "none",
     ])
     .default("HS256"),
+  AUTH_GOOGLE_ID: z.string(),
+  AUTH_GOOGLE_SECRET: z.string(),
+  AUTH_FACEBOOK_ID: z.string(),
+  AUTH_FACEBOOK_SECRET: z.string(),
+  NEXT_PUBLIC_API_URL: z.string().url(),
 });
 
 dotenv.config();

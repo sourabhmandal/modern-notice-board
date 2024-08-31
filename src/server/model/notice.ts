@@ -1,26 +1,39 @@
-import { pgEnum, pgTable, serial, text } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import {
+  boolean,
+  pgTable,
+  text,
+  timestamp,
+  varchar,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { z } from "zod";
+import { users } from "./auth";
 
-export const userRoleEnum = pgEnum("role", ["ADMIN", "STUDENT"]);
-
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  role: text("role", { enum: userRoleEnum.enumValues })
-    .default("STUDENT")
-    .notNull(),
+export const attachments = pgTable("attachment", {
+  fileid: text("fileid").primaryKey(),
+  noticeid: text("noticeid").notNull(),
+  filename: text("filename").notNull(),
+  filetype: text("filetype").notNull(),
 });
+export const insertAttachmentSchema = createInsertSchema(attachments);
+export const selectAttachmentSchema = createSelectSchema(attachments);
 
-const userSchema = createSelectSchema(users);
-const createUserSchema = createInsertSchema(users);
-
-export type IUser = z.infer<typeof userSchema>;
-
-const CreateUser = createUserSchema.pick({
-  id: true,
-  name: true,
-  role: true,
+export const notices = pgTable("notices", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  adminEmail: text("adminEmail"),
+  isPublished: boolean("isPublished").notNull(),
+  title: text("title").notNull(),
+  body: varchar("body", { length: 20000 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).defaultNow(),
 });
-
-export type ICreateUser = z.infer<typeof CreateUser>;
+export const noticesRelations = relations(notices, ({ one }) => ({
+  adminEmailFk: one(users, {
+    fields: [notices.adminEmail],
+    references: [users.email],
+  }),
+}));
+export const insertNoticeSchema = createInsertSchema(notices);
+export const selectNoticeSchema = createSelectSchema(notices);
