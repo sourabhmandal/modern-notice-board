@@ -19,20 +19,26 @@ export {
   AUTH_LOGIN_REDIRECT,
   AUTH_REGISTER,
   AUTH_RESET,
+  CREATE_NOTICE,
   DASHBOARD,
   LANDING,
+  RESOURCES,
+  USERS_LIST,
   apiAuthPrefix,
   authRoutes,
   publicRoutes,
 } from "./constants/frontend-routes";
 export { ThemeModeProvider } from "./context/ThemeModeProvider";
 export { CollapsibleTable } from "./data-display/CollapsibleTable";
+export { DashboardMainContent } from "./data-display/DashboardMainContent";
 export { FeatureChip } from "./data-display/FeatureChip";
 export { ListTable } from "./data-display/ListTable";
 export { ListTableTwo } from "./data-display/ListTableTwo";
 export { Toast, type IToastMessage } from "./data-display/Toast";
 export { useToast } from "./data-display/useToast";
+export { NoticeEditor } from "./editor/NoticeEditor";
 export { AppNavbar } from "./navigation/AppNavbar";
+export { Breadcrumb } from "./navigation/Breadcrumb";
 export { DashboardSideMenu } from "./navigation/DashboardSideMenu";
 export { LandingPageAppBar } from "./navigation/LandingPageAppBar";
 export { LandingPageFAQ } from "./section/LandingPageFAQ";
@@ -43,3 +49,4 @@ export { LandingPagePricing } from "./section/LandingPagePricing";
 export { LandingPageTestimonials } from "./section/LandingPageTestimonials";
 export { LandinPageFeatures } from "./section/LandinPageFeatures";
 export { LandinPageHero } from "./section/LandinPageHero";
+

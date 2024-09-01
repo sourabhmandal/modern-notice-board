@@ -1,5 +1,5 @@
 "use client";
-import { ListTable } from "@/components";
+import { DashboardMainContent, ListTable } from "@/components";
 import CloseIcon from "@mui/icons-material/Close";
 import {
   alpha,
@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { TransitionProps } from "@mui/material/transitions";
 import { forwardRef, useState } from "react";
+
 export default function DashboardPage() {
   const [open, setOpen] = useState(-1);
   const theme = useTheme();
@@ -106,10 +107,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <Box my={4}>
-      <Typography variant="h5" mb={2}>
-        Notices
-      </Typography>
+    <DashboardMainContent>
       <ListTable
         onClickAction={(num: number) => setOpen(num)}
         items={listItems}
@@ -172,7 +170,7 @@ export default function DashboardPage() {
           Test {open}
         </Dialog>
       )}
-    </Box>
+    </DashboardMainContent>
   );
 }
 

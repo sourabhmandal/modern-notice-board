@@ -1,6 +1,10 @@
 "use client";
+import DeleteOutlineTwoToneIcon from "@mui/icons-material/DeleteOutlineTwoTone";
+import DriveFileRenameOutlineTwoToneIcon from "@mui/icons-material/DriveFileRenameOutlineTwoTone";
 import {
   Box,
+  IconButton,
+  ListItem,
   ListItemButton,
   Pagination,
   useMediaQuery,
@@ -44,33 +48,53 @@ export function ListTable({ items, onClickAction }: IListTable) {
           border: 1,
           borderColor: "divider",
         }}
+        dense
       >
         {items.slice(0, rowPerPageState).map((item, index) => (
           <React.Fragment key={`list-item-${index}`}>
-            <ListItemButton
-              alignItems="flex-start"
-              onClick={() => onClickAction(index)}
+            <ListItem
+              sx={{ padding: 0 }}
+              secondaryAction={
+                <Box
+                  gap={2}
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                >
+                  <IconButton edge="end" color="warning" aria-label="delete">
+                    <DriveFileRenameOutlineTwoToneIcon />
+                  </IconButton>
+                  <IconButton edge="end" color="error" aria-label="delete">
+                    <DeleteOutlineTwoToneIcon />
+                  </IconButton>
+                </Box>
+              }
             >
-              {item.profileImage && (
-                <ListItemAvatar>
-                  <Avatar alt="Remy Sharp" src={item.profileImage} />
-                </ListItemAvatar>
-              )}
-              <ListItemText
-                primary={
-                  <Typography color="text.primary">{item.title}</Typography>
-                }
-                secondary={
-                  <Typography
-                    component="span"
-                    variant="body2"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    {item.subtitle}
-                  </Typography>
-                }
-              />
-            </ListItemButton>
+              <ListItemButton
+                alignItems="flex-start"
+                onClick={() => onClickAction(index)}
+              >
+                {item.profileImage && (
+                  <ListItemAvatar>
+                    <Avatar alt="Remy Sharp" src={item.profileImage} />
+                  </ListItemAvatar>
+                )}
+                <ListItemText
+                  primary={
+                    <Typography color="text.primary">{item.title}</Typography>
+                  }
+                  secondary={
+                    <Typography
+                      component="span"
+                      variant="body2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      {item.subtitle}
+                    </Typography>
+                  }
+                />
+              </ListItemButton>
+            </ListItem>
             {index == rowPerPageState - 1 ? <></> : <Divider />}
           </React.Fragment>
         ))}

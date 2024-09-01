@@ -4,9 +4,18 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import HomeIcon from "@mui/icons-material/Home";
 import { Box, Link, Typography } from "@mui/material";
 import NextLink from "next/link";
-export function Breadcrumb() {
+import { useEffect, useState } from "react";
+
+interface BreadcrumbProps {
+  path: string;
+}
+export function Breadcrumb({ path }: BreadcrumbProps) {
   // Parse the current path from the router
-  const pathnames = window.location.pathname.split("/").filter((x) => x);
+  const [pathname, setPathname] = useState<Array<String>>(["/"]);
+
+  useEffect(() => {
+    if (window) setPathname(path.split("/").filter((x) => x));
+  }, [window.location.pathname]);
 
   return (
     <Box
@@ -35,9 +44,9 @@ export function Breadcrumb() {
       />
 
       {/* Dynamically generate breadcrumbs from the path */}
-      {pathnames.map((value, index) => {
+      {pathname.map((value, index) => {
         // Build the path to this point
-        const href = "/" + pathnames.slice(0, index + 1).join("/");
+        const href = "/" + pathname.slice(0, index + 1).join("/");
 
         // Capitalize and replace hyphens with spaces for display
         const label = value
@@ -45,7 +54,7 @@ export function Breadcrumb() {
           .replace(/\b\w/g, (char) => char.toUpperCase());
 
         // Determine if the current link is the last in the list
-        const isLast = index === pathnames.length - 1;
+        const isLast = index === pathname.length - 1;
 
         return isLast ? (
           <Typography key={href} color="text.secondary" variant="body1">

@@ -5,6 +5,9 @@ export const AUTH_ERROR = "/auth/error";
 export const AUTH_RESET = "/auth/reset";
 export const AUTH_LOGIN_REDIRECT = "/settings";
 export const DASHBOARD = "/dashboard";
+export const RESOURCES = "/dashboard/resources";
+export const USERS_LIST = "/dashboard/users";
+export const CREATE_NOTICE = "/dashboard/notice";
 
 export const apiAuthPrefix = "/api/auth";
 
