@@ -11,7 +11,7 @@ import {
 import { SetStateAction } from "react";
 
 function SlideTransition(props: SlideProps) {
-  return <Slide {...props} direction="up" />;
+  return <Slide {...props} direction="down" />;
 }
 
 export interface IToastMessage {
@@ -50,6 +50,7 @@ export function Toast({ type = "info", message, setMessage }: IToast) {
       TransitionComponent={SlideTransition}
       key={SlideTransition.name}
       autoHideDuration={1200}
+      anchorOrigin={{ vertical: "top", horizontal: "center" }}
     >
       <Alert
         onClose={() =>

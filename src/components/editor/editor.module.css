@@ -1,0 +1,11 @@
+.editorContainer {
+  display: flex;
+  flex-direction: column; /* Allows the editor to grow with the parent */
+  height: 70vh; /* Full height of the parent container */
+}
+
+.editorContent {
+  flex-grow: 1; /* Allows the content area to expand */
+  min-height: 0; /* Important for flex items to grow correctly */
+  overflow-y: auto; /* Enable vertical scrolling if needed */
+}

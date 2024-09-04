@@ -5,11 +5,7 @@ import bcrypt from "bcryptjs";
 import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-export const registerResponse = z.object({
-  status: z.enum(["success", "error"]),
-  message: z.string(),
-});
-type TRegisterResponse = z.infer<typeof registerResponse>;
+
 
 export const RegisterRequest = z.object({
   fullName: z.string().nullable(),
@@ -132,6 +128,7 @@ export async function checkAndRegisterNewUserWithAccount(
           name: users.name,
           image: users.image,
           emailVerifiedAt: users.emailVerifiedAt,
+          role: users.role,
         });
 
       if (newUser.length > 0) {
@@ -187,3 +184,9 @@ const saltAndHashPassword = async (password: string): Promise<string> => {
     throw err;
   }
 };
+
+export const registerResponse = z.object({
+  status: z.enum(["success", "error"]),
+  message: z.string(),
+});
+type TRegisterResponse = z.infer<typeof registerResponse>;

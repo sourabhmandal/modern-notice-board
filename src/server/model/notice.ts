@@ -1,11 +1,5 @@
 import { relations } from "drizzle-orm";
-import {
-  boolean,
-  pgTable,
-  text,
-  timestamp,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { boolean, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { users } from "./auth";
 
@@ -25,7 +19,8 @@ export const notices = pgTable("notices", {
   adminEmail: text("adminEmail"),
   isPublished: boolean("isPublished").notNull(),
   title: text("title").notNull(),
-  body: varchar("body", { length: 20000 }).notNull(),
+  content: jsonb("content").notNull(),
+  contentHtml: text("contentHtml"),
   createdAt: timestamp("createdAt", { mode: "date" }).defaultNow(),
   updatedAt: timestamp("updatedAt", { mode: "date" }).defaultNow(),
 });

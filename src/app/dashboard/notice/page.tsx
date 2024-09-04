@@ -1,11 +1,9 @@
 "use client";
-import { DashboardMainContent } from "@/components";
-import { NoticeEditor } from "@/components/editor/NoticeEditor";
-import { Typography, useTheme } from "@mui/material";
+import { DashboardMainContent, NoticeEditor } from "@/components";
+import { Typography } from "@mui/material";
 import { useState } from "react";
 export default function DashboardPage() {
   const [open, setOpen] = useState(0);
-  const theme = useTheme();
 
   return (
     <DashboardMainContent>

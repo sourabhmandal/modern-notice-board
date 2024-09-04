@@ -1,184 +1,97 @@
 "use client";
-import { DashboardMainContent, ListTable } from "@/components";
-import CloseIcon from "@mui/icons-material/Close";
 import {
-  alpha,
-  AppBar,
-  Box,
-  Button,
-  Dialog,
-  Slide,
-  Toolbar,
-  Typography,
-  useTheme,
-} from "@mui/material";
-import { TransitionProps } from "@mui/material/transitions";
-import { forwardRef, useState } from "react";
+  GetAllNoticeResponse,
+  TGetAllNoticeResponse,
+} from "@/app/api/notice/route";
+import {
+  DashboardMainContent,
+  GET_ALL_NOTICE_API,
+  NoticeListTable,
+  useToast,
+  ViewNoticeDialog,
+} from "@/components";
+import { NotificationResponse } from "@/components/utils/api.utils";
+import { Box, CircularProgress } from "@mui/material";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import useSWR from "swr";
 
 export default function DashboardPage() {
-  const [open, setOpen] = useState(-1);
-  const theme = useTheme();
+  const [allNoticeData, setAllNoticeData] = useState<TGetAllNoticeResponse>();
+  const [selectedNoticeId, setSelectedNoticeId] = useState("");
 
-  const listItems = [
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-    {
-      title: "Brunch this weekend?",
-      subtitle: "Ali Connors",
-    },
-  ];
+  const toast = useToast();
+  const searchParams = useSearchParams();
+  const pageNos = ~~parseInt(searchParams.get("page") ?? "1");
+  const rowNos = 10;
+  const { data: AllNoticesResponse, isLoading: isAllNoticesLoading } = useSWR(
+    GET_ALL_NOTICE_API(pageNos)
+  );
+
+  useEffect(() => {
+    console.log("SELECTED NOTICE ID", selectedNoticeId);
+  }, [selectedNoticeId]);
+
+  useEffect(() => {
+    if (isAllNoticesLoading) return;
+
+    const parsedErrorResponse =
+      NotificationResponse.safeParse(AllNoticesResponse);
+
+    if (parsedErrorResponse.success) {
+      return toast.showToast(
+        "Failed to fetch all notices",
+        parsedErrorResponse.data.message,
+        parsedErrorResponse.data.status
+      );
+    }
+    const parsedResponse = GetAllNoticeResponse.safeParse(AllNoticesResponse);
+
+    if (parsedResponse.success) {
+      setAllNoticeData(parsedResponse.data);
+      console.log(parsedResponse.data);
+    } else if (parsedResponse.success === false && !isAllNoticesLoading) {
+      toast.showToast(
+        "Failed to fetch all notices",
+        "server error occured",
+        "error"
+      );
+    }
+  }, [AllNoticesResponse]);
+
+  if (isAllNoticesLoading) {
+    return (
+      <Box
+        display="flex"
+        height="100vh"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <CircularProgress size={80} />
+      </Box>
+    );
+  }
 
   return (
     <DashboardMainContent>
-      <ListTable
-        onClickAction={(num: number) => setOpen(num)}
-        items={listItems}
-        currentPage={1}
-        rowPerPage={10}
-        totalCount={listItems.length + 1}
+      <toast.ToastComponent />
+      <NoticeListTable
+        onClickAction={(id: string) => setSelectedNoticeId(id)}
+        onUpdateAction={(id: string) => setSelectedNoticeId(id)}
+        items={
+          allNoticeData?.notices.map((notice) => ({
+            id: notice.id,
+            title: notice.title,
+            subtitle: `from ${notice.adminEmail}`,
+            isPublished: notice.isPublished,
+            adminEmail: notice.adminEmail,
+          })) || []
+        }
+        currentPage={pageNos}
+        rowPerPage={rowNos}
+        totalCount={allNoticeData?.totalCount ?? 0}
       />
-      {open >= 0 && (
-        <Dialog
-          fullScreen
-          open={open !== -1}
-          onClose={() => setOpen(-1)}
-          TransitionComponent={Transition}
-        >
-          <AppBar
-            sx={{
-              position: "relative",
-              boxShadow: "none",
-              backgroundColor:
-                theme.palette.mode == "light"
-                  ? alpha(theme.palette.primary.light, 0.2)
-                  : theme.palette.primary.dark,
-            }}
-          >
-            <Toolbar
-              sx={{
-                display: "flex",
-                flexGrow: 1,
-                justifyContent: "space-between",
-              }}
-            >
-              <Box>
-                <Typography
-                  sx={{ ml: 2, flex: 1, lineHeight: 1 }}
-                  color="text.primary"
-                  variant="h5"
-                >
-                  {listItems[open].title}
-                </Typography>
-                <Typography
-                  sx={{ ml: 2, flex: 1, lineHeight: 1 }}
-                  color="text.secondary"
-                  variant="subtitle1"
-                >
-                  {listItems[open].subtitle}
-                </Typography>
-              </Box>
-              <Button
-                color="error"
-                size="large"
-                variant="outlined"
-                onClick={() => setOpen(-1)}
-                aria-label="close"
-                startIcon={<CloseIcon />}
-              >
-                Close
-              </Button>
-            </Toolbar>
-          </AppBar>
-          Test {open}
-        </Dialog>
-      )}
+      <ViewNoticeDialog id={selectedNoticeId} setOpen={setSelectedNoticeId} />
     </DashboardMainContent>
   );
 }
-
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement<any>;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
