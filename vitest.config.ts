@@ -9,7 +9,8 @@ export default defineConfig({
       "@/": new URL("./src/", import.meta.url).pathname,
     },
     coverage: {
-      reporter: ["text", "json"],
+      reporter: ["text"],
     },
+    reporters: ["junit"],
   },
 });
