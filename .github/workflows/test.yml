@@ -23,7 +23,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          files: '**/vitest-results.json'
+          files: '**/coverage-final.json'
           check_name: Vitest Tests
           comment_title: Vitest Test Results
           github_token: ${{ secrets.GITHUB_TOKEN }}
