@@ -19,6 +19,12 @@ jobs:
       - name: Run Vitest
         run: npx vitest --reporter=verbose --outputFile=vitest-results.json
 
+      - name: Install tree command
+        run: sudo apt-get install tree
+
+      - name: List directory tree
+        run: tree -L 5
+
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
