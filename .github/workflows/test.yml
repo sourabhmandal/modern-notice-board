@@ -23,7 +23,7 @@ jobs:
         run: sudo apt-get install tree
 
       - name: List directory tree
-        run: tree -L 5
+        run: tree -L 3 | grep -v 'node_modules'
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
