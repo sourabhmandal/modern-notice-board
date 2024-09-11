@@ -1,4 +1,12 @@
 "use client";
+import {
+  GetAllNoticeResponse,
+  TGetAllNoticeResponse,
+} from "@/app/api/notice/route";
+import { useToast, ViewNoticeDialog } from "@/components";
+import { GET_ALL_NOTICE_API } from "@/components/constants/backend-routes";
+import { DeleteNoticeDialog } from "@/components/popovers/DeleteNoticeDialog";
+import { NotificationResponse } from "@/components/utils/api.utils";
 import DeleteOutlineTwoToneIcon from "@mui/icons-material/DeleteOutlineTwoTone";
 import DriveFileRenameOutlineTwoToneIcon from "@mui/icons-material/DriveFileRenameOutlineTwoTone";
 import {
@@ -16,8 +24,8 @@ import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
-import { DeleteNoticeDialog } from "../popovers/DeleteNoticeDialog";
+import React, { useEffect, useState } from "react";
+import useSWR from "swr";
 
 export interface IListTableItem {
   id: string;
@@ -27,35 +35,73 @@ export interface IListTableItem {
   adminEmail?: string;
 }
 export interface IListTable {
-  items: Array<IListTableItem>;
   currentPage: number;
   rowPerPage: number;
-  totalCount: number;
-  onClickAction: (num: string) => void;
-  onUpdateAction: (num: string) => void;
 }
 
-export function NoticeListTable({
-  items,
-  onClickAction,
-  onUpdateAction,
-  currentPage,
-  rowPerPage,
-  totalCount,
-}: IListTable) {
+export function NoticeListTable({ currentPage, rowPerPage }: IListTable) {
   const router = useRouter();
   const theme = useTheme();
+  const toast = useToast();
+  const [allNoticeData, setAllNoticeData] = useState<TGetAllNoticeResponse>();
+  const [selectedViewNoticeId, setSelectedViewNoticeId] = useState("");
   const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
   const [toDeleteNoticeId, setToDeleteNoticeId] = useState<string>("");
 
+  const { data: AllNoticesResponse, isLoading: isAllNoticesLoading } = useSWR(
+    GET_ALL_NOTICE_API(currentPage),
+    {
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      refreshInterval: 20000,
+    }
+  );
+
+  useEffect(() => {
+    if (isAllNoticesLoading) return;
+
+    const parsedErrorResponse =
+      NotificationResponse.safeParse(AllNoticesResponse);
+
+    if (parsedErrorResponse.success) {
+      return toast.showToast(
+        "Failed to fetch all notices",
+        parsedErrorResponse.data.message,
+        parsedErrorResponse.data.status
+      );
+    }
+    const parsedResponse = GetAllNoticeResponse.safeParse(AllNoticesResponse);
+
+    if (parsedResponse.success) {
+      setAllNoticeData(parsedResponse.data);
+      console.log(parsedResponse.data);
+    } else if (parsedResponse.success === false && !isAllNoticesLoading) {
+      toast.showToast(
+        "Failed to fetch all notices",
+        "server error occured",
+        "error"
+      );
+    }
+  }, [AllNoticesResponse]);
+
   return (
     <Box>
-      <DeleteNoticeDialog
-        noticeId={toDeleteNoticeId}
-        setOpen={setToDeleteNoticeId}
-        currentPage={currentPage}
-        noticeList={items}
-      />
+      {toDeleteNoticeId && (
+        <DeleteNoticeDialog
+          noticeId={toDeleteNoticeId}
+          setOpen={setToDeleteNoticeId}
+          currentPage={currentPage}
+          noticeList={allNoticeData?.notices ?? []}
+          setAllNoticeData={setAllNoticeData}
+        />
+      )}
+      {selectedViewNoticeId && (
+        <ViewNoticeDialog
+          id={selectedViewNoticeId}
+          setOpen={setSelectedViewNoticeId}
+        />
+      )}
+
       <List
         sx={{
           width: "100%",
@@ -67,7 +113,7 @@ export function NoticeListTable({
         }}
         dense
       >
-        {items.slice(0, rowPerPage).map((item, index) => (
+        {allNoticeData?.notices.slice(0, rowPerPage).map((item, index) => (
           <React.Fragment key={`list-item-${item.id}`}>
             <ListItem
               sx={{ padding: 0 }}
@@ -82,7 +128,7 @@ export function NoticeListTable({
                     edge="end"
                     color="warning"
                     aria-label="update"
-                    onClick={() => onUpdateAction(item.id)}
+                    onClick={() => setSelectedViewNoticeId(item.id)}
                   >
                     <DriveFileRenameOutlineTwoToneIcon />
                   </IconButton>
@@ -99,7 +145,7 @@ export function NoticeListTable({
             >
               <ListItemButton
                 alignItems="flex-start"
-                onClick={() => onClickAction(item.id)}
+                onClick={() => setSelectedViewNoticeId(item.id)}
               >
                 <ListItemText
                   primary={
@@ -111,13 +157,13 @@ export function NoticeListTable({
                       variant="body2"
                       sx={{ color: alpha(theme.palette.text.secondary, 0.4) }}
                     >
-                      {item.subtitle}
+                      {`from ${item.adminEmail}`}
                     </Typography>
                   }
                 />
               </ListItemButton>
             </ListItem>
-            {index == rowPerPage - 1 ? <></> : <Divider />}
+            {index === rowPerPage - 1 ? null : <Divider />}
           </React.Fragment>
         ))}
       </List>
@@ -135,7 +181,7 @@ export function NoticeListTable({
       >
         <Pagination
           size={isSmall ? "small" : "medium"}
-          count={Math.ceil(totalCount / rowPerPage)}
+          count={Math.ceil((allNoticeData?.totalCount ?? 0) / rowPerPage)}
           page={currentPage}
           variant="outlined"
           shape="rounded"

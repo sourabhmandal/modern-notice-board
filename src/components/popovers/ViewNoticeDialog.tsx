@@ -64,18 +64,7 @@ export function ViewNoticeDialog({ id, setOpen }: ViewNoticeDialogProps) {
     }
   }, [NoticesResponse]);
 
-  if (isAllNoticesLoading) {
-    return (
-      <Box
-        display="flex"
-        height="100vh"
-        justifyContent="center"
-        alignItems="center"
-      >
-        <CircularProgress size={80} />
-      </Box>
-    );
-  }
+  
   return (
     <Dialog
       fullScreen
@@ -83,6 +72,16 @@ export function ViewNoticeDialog({ id, setOpen }: ViewNoticeDialogProps) {
       onClose={() => setOpen("")}
       TransitionComponent={Transition}
     >
+      {isAllNoticesLoading && (
+        <Box
+          display="flex"
+          height="100vh"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <CircularProgress size={80} />
+        </Box>
+      )}
       <AppBar
         sx={{
           position: "relative",

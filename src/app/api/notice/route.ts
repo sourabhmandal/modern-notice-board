@@ -4,6 +4,7 @@ import { notices } from "@/server/model/notice";
 import { count, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { GetNoticeResponse } from "./[id]/route";
 
 async function createNoticeHandler(request: Request) {
   try {
@@ -133,16 +134,7 @@ export const CreateNoticeRequest = z.object({
 export type TCreateNoticeRequest = z.infer<typeof CreateNoticeRequest>;
 
 export const GetAllNoticeResponse = z.object({
-  notices: z.array(
-    z.object({
-      id: z.string().uuid(),
-      title: z.string(),
-      adminEmail: z.string().email(),
-      content: z.string(),
-      contentHtml: z.string().optional(),
-      isPublished: z.boolean(),
-    })
-  ),
+  notices: z.array(GetNoticeResponse),
   totalCount: z.number().default(0),
 });
 export type TGetAllNoticeResponse = z.infer<typeof GetAllNoticeResponse>;

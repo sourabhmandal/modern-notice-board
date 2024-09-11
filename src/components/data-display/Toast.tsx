@@ -49,20 +49,16 @@ export function Toast({ type = "info", message, setMessage }: IToast) {
       open={message.messageTitle.length > 0}
       TransitionComponent={SlideTransition}
       key={SlideTransition.name}
-      autoHideDuration={1200}
+      autoHideDuration={2000}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      onClose={() =>
+        setMessage({
+          messageTitle: "",
+          messageSubtitle: "",
+        })
+      }
     >
-      <Alert
-        onClose={() =>
-          setMessage({
-            messageTitle: "",
-            messageSubtitle: "",
-          })
-        }
-        severity={type}
-        variant="filled"
-        sx={{ width: "100%" }}
-      >
+      <Alert severity={type} variant="filled" sx={{ width: "100%" }}>
         <Box display="flex" flexDirection="column">
           <Typography variant="body1">{message.messageTitle}</Typography>
           <Typography variant="body2" color={getSubtitleColor()}>

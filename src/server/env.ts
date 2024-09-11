@@ -48,6 +48,10 @@ const envSchema = z.object({
   AUTH_FACEBOOK_ID: z.string(),
   AUTH_FACEBOOK_SECRET: z.string(),
   NEXT_PUBLIC_API_URL: z.string().url(),
+  AIT_AWS_ACCESS_KEY: z.string(),
+  AIT_AWS_BUCKET_ID: z.string(),
+  AIT_AWS_REGION: z.string(),
+  AIT_AWS_SECRET_ACCESS_KEY: z.string(),
 });
 
 dotenv.config();

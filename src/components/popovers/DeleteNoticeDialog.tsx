@@ -1,6 +1,8 @@
 "use client";
+import { TGetNoticeResponse } from "@/app/api/notice/[id]/route";
+import { TGetAllNoticeResponse } from "@/app/api/notice/route";
+import DeleteIcon from "@mui/icons-material/Delete";
 import {
-  Box,
   Button,
   CircularProgress,
   Dialog,
@@ -8,33 +10,30 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Slide,
+  Divider,
   Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { TransitionProps } from "@mui/material/transitions";
-import { forwardRef, SetStateAction, useEffect } from "react";
-import { mutate } from "swr";
+import { SetStateAction, useEffect } from "react";
 import useSWRMutation from "swr/mutation";
-import {
-  DELTE_NOTICE_BY_ID_API,
-  GET_ALL_NOTICE_API,
-} from "../constants/backend-routes";
-import { IListTableItem } from "../data-display/NoticeListTable";
+import { DELTE_NOTICE_BY_ID_API } from "../constants/backend-routes";
 import { useToast } from "../data-display/useToast";
 import { NotificationResponse, sendSwrDeleteRequest } from "../utils/api.utils";
-
 interface DeleteNoticeDialogProps {
   noticeId: string;
   setOpen: React.Dispatch<SetStateAction<string>>;
   currentPage: number;
-  noticeList: Array<IListTableItem>;
+  noticeList: Array<TGetNoticeResponse>;
+  setAllNoticeData: React.Dispatch<
+    SetStateAction<TGetAllNoticeResponse | undefined>
+  >;
 }
 export function DeleteNoticeDialog({
   noticeId,
   setOpen,
   currentPage,
   noticeList,
+  setAllNoticeData,
 }: DeleteNoticeDialogProps) {
   const toast = useToast();
   const theme = useTheme();
@@ -54,10 +53,6 @@ export function DeleteNoticeDialog({
 
     if (parsedResponse.success) {
       if (parsedResponse?.data?.status === "success") {
-        const newNoticeList = noticeList?.filter(
-          (notice) => notice.id !== noticeId
-        );
-        mutate(GET_ALL_NOTICE_API(currentPage), newNoticeList, false);
         setOpen("");
         return toast.showToast(
           "Successfully to delete notice",
@@ -80,41 +75,29 @@ export function DeleteNoticeDialog({
     }
   }, [DeleteNoticeResponse]);
 
-  if (isDeleteNoticeLoading) {
-    return (
-      <Box
-        display="flex"
-        height="100vh"
-        justifyContent="center"
-        alignItems="center"
-      >
-        <CircularProgress size={80} />
-      </Box>
-    );
-  }
   return (
     <Dialog
       open={noticeId !== ""}
       onClose={() => setOpen("")}
-      TransitionComponent={Transition}
       maxWidth="sm"
       fullWidth
     >
       <DialogTitle id="alert-dialog-title">
         Do you want to delete notice?
       </DialogTitle>
+      <Divider />
       <DialogContent>
         <DialogContentText id="alert-dialog-description">
+          <Typography variant="body1">
+            You are deleting the following notice
+          </Typography>
           <Typography sx={{ fontSize: 12, color: theme.palette.grey[400] }}>
             {noticeId}
           </Typography>
-          <Typography variant="body1">
-            you are deleting the following notice
-          </Typography>
           <Typography
-            variant="h6"
+            variant="body1"
             sx={{
-              fontWeight: "bold",
+              fontWeight: 700,
               color: theme.palette.error.main,
               mt: 1,
             }}
@@ -135,6 +118,14 @@ export function DeleteNoticeDialog({
         <Button
           variant="contained"
           onClick={() => mutateDeleteNoticeResponse()}
+          color="error"
+          startIcon={
+            isDeleteNoticeLoading ? (
+              <CircularProgress size={20} />
+            ) : (
+              <DeleteIcon />
+            )
+          }
           autoFocus
         >
           Delete
@@ -143,12 +134,3 @@ export function DeleteNoticeDialog({
     </Dialog>
   );
 }
-
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement<any>;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});

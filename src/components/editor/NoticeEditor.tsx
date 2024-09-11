@@ -1,17 +1,27 @@
 "use client";
 
+import type { TCreateNoticeRequest } from "@/app/api/notice/route";
+import { CREATE_NOTICE_API } from "@/components";
 import { useToast } from "@/components/data-display/useToast";
 import { NotificationResponse } from "@/components/utils/api.utils";
+import { S3Instance } from "@/service/S3";
+import { zodResolver } from "@hookform/resolvers/zod";
+import CloseIcon from "@mui/icons-material/Close";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DescriptionIcon from "@mui/icons-material/Description";
 import {
   Box,
   Button,
+  Card,
+  CircularProgress,
   FormControl,
   FormControlLabel,
   FormLabel,
   Radio,
   RadioGroup,
   TextField,
+  Typography,
+  useTheme,
 } from "@mui/material";
 import Bold from "@tiptap/extension-bold";
 import BulletedList from "@tiptap/extension-bullet-list";
@@ -33,12 +43,6 @@ import Text from "@tiptap/extension-text";
 import TextAlign from "@tiptap/extension-text-align";
 import TextStyle from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
-import css from "./editor.module.css";
-
-import type { TCreateNoticeRequest } from "@/app/api/notice/route";
-import { CREATE_NOTICE_API } from "@/components";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { CircularProgress } from "@mui/material";
 import { generateHTML } from "@tiptap/html";
 import {
   ImageNodeAttributes,
@@ -69,6 +73,7 @@ import { useForm } from "react-hook-form";
 import useSWRMutation from "swr/mutation";
 import { z } from "zod";
 import { sendSwrPostRequest } from "../utils/api.utils";
+import css from "./editor.module.css";
 
 interface NoticeEditorProps {
   open: number;
@@ -109,6 +114,8 @@ export function NoticeEditor({
   const rteRef = useRef<RichTextEditorRef>(null);
   const session = useSession();
   const toast = useToast();
+  const theme = useTheme();
+  const s3 = S3Instance.GetS3();
 
   const {
     register,
@@ -125,7 +132,48 @@ export function NoticeEditor({
       isPublished: "false",
     },
   });
-  const formValues = watch(); // Watch all fields
+
+  const PreviewsRemoteFiles = form.values.attachments?.map((file, index) => {
+    return (
+      <Card
+        key={file.fileid}
+        sx={{
+          border: "1px solid #ccc",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: 4,
+        }}
+      >
+        <CloudUploadIcon />
+        <div style={{ marginLeft: 6 }}>
+          <Typography variant="subtitle1">{file.filename}</Typography>
+          <Typography color="text.secondary" variant="subtitle1">
+            {file.filetype}
+          </Typography>
+        </div>
+        <ActionIcon
+          variant="light"
+          onClick={() => {
+            // remove from aws files
+            deleteNoticeByFileId.mutate(
+              { noticeId: id, filename: file.filename },
+              {
+                onSuccess(variables, context) {
+                  showNotification({
+                    message: `${context.filename} deleted`,
+                  });
+                  trpcContext.notice.noticeDetail.invalidate();
+                },
+              }
+            );
+          }}
+        >
+          <CloseIcon />
+        </ActionIcon>
+      </Card>
+    );
+  });
 
   // create a notice
   const {
@@ -198,6 +246,9 @@ export function NoticeEditor({
       reader.readAsDataURL(file);
       const result = await promise;
       results.push(result);
+
+      // s3 file upload
+      S3Instance.UploadFile(file.name);
     }
 
     return results;
@@ -275,7 +326,8 @@ export function NoticeEditor({
               )}
             />
           </Box>
-          <FormControl>
+
+          <FormControl sx={{ mt: 2 }}>
             <FormLabel id="demo-row-radio-buttons-group-label">
               How should we save the notice?
             </FormLabel>
@@ -323,6 +375,8 @@ export function NoticeEditor({
       </Suspense>
     );
 }
+
+
 
 export const CreateNoticeSchema = z.object({
   title: z.string().min(1, {
