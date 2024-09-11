@@ -17,16 +17,13 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Run Vitest
-        run: npx vitest
+        run: npx vitest --reporter=verbose --outputFile=vitest-results.json
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          files: |
-            coverage/**/*.xml
-            coverage/**/*.trx
-            coverage/**/*.json
+          files: '**/vitest-results.json'
           check_name: Vitest Tests
           comment_title: Vitest Test Results
           github_token: ${{ secrets.GITHUB_TOKEN }}
