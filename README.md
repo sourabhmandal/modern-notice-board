@@ -12,6 +12,16 @@ pnpm dev
 bun dev
 ```
 
+## Vitest Test Results
+- 3 tests  ±0   3 :white_check_mark: ±0   0s :stopwatch: ±0s
+- 1 suites ±0   0 :zzz: ±0 
+- 1 files   ±0   0 :x: ±0 
+
+Results for commit a9c1338a. ± Comparison against base commit 15d61a6c.
+
+
+:recycle: This comment has been updated with latest results.
+
 ## Roadmap
 
 - [X] Add material UI
