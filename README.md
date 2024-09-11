@@ -12,9 +12,11 @@ pnpm dev
 bun dev
 ```
 
-## TODO
+## Roadmap
 
 - [X] Add material UI
-- [ ] Add Drizzle
-- [ ] Add zod and api type-safety
+- [X] Add Drizzle
+- [X] Add zod and api type-safety
 - [X] Add OpenAPI
+- [ ] create notice with file upload
+- [ ] view notice with files
