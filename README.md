@@ -17,9 +17,6 @@ bun dev
 - 1 suites ±0   0 :zzz: ±0 
 - 1 files   ±0   0 :x: ±0 
 
-Results for commit a9c1338a. ± Comparison against base commit 15d61a6c.
-
-
 :recycle: This comment has been updated with latest results.
 
 ## Roadmap
