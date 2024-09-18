@@ -1,12 +1,18 @@
 import { TNotificationResponse } from "@/components/utils/api.utils";
 import { initializeDb } from "@/server";
-import { notices } from "@/server/model/notice";
+import {
+  attachments,
+  notices,
+  TInsertAttachmentSchema,
+} from "@/server/model/notice";
+import { S3Instance } from "@/server/S3";
 import { count, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { GetNoticeResponse } from "./[id]/route";
 
 async function createNoticeHandler(request: Request) {
+  console.log("createNoticeHandler");
   try {
     const reqData = await request.json();
     const validatedFields = CreateNoticeRequest.safeParse(reqData);
@@ -28,13 +34,43 @@ async function createNoticeHandler(request: Request) {
 
     // create notice in db
     const db = await initializeDb();
-    await db.insert(notices).values({
-      title: validatedFields.data.title,
-      isPublished: validatedFields.data.isPublished,
-      content: validatedFields.data.content,
-      contentHtml: validatedFields.data.contentHtml,
-      adminEmail: validatedFields.data.adminEmail,
-    });
+    const savedNotice = await db
+      .insert(notices)
+      .values({
+        title: validatedFields.data.title,
+        isPublished: validatedFields.data.isPublished,
+        content: validatedFields.data.content,
+        contentHtml: validatedFields.data.contentHtml,
+        adminEmail: validatedFields.data.adminEmail,
+      })
+      .returning();
+
+    await Promise.all(
+      validatedFields.data.files.map(async (file) => {
+        const source = `temp-uploads/${file}`;
+        const destination = `${
+          savedNotice.length > 0 ? savedNotice[0].id : "temp-uploads"
+        }/${file}`;
+        await S3Instance.moveS3File(source, destination);
+        return db
+          .insert(attachments)
+          .values({
+            noticeid:
+              savedNotice.length > 0 ? savedNotice[0].id : "temp-uploads",
+            filename: file,
+            filepath: source,
+            filetype: file.split(".").pop() ?? "text",
+          } as TInsertAttachmentSchema)
+          .onConflictDoUpdate({
+            target: [attachments.filepath],
+            set: {
+              filepath: destination,
+              noticeid:
+                savedNotice.length > 0 ? savedNotice[0].id : "temp-uploads",
+            } as TInsertAttachmentSchema,
+          });
+      })
+    );
 
     return NextResponse.json(
       {
@@ -115,7 +151,7 @@ async function getAllNoticeHandler(request: Request) {
     return NextResponse.json(
       {
         status: "error",
-        message: "notice created unsuccessful due to server error",
+        message: `unable to get notices due to server error`,
       } as TNotificationResponse,
       {
         status: 500,
@@ -130,6 +166,7 @@ export const CreateNoticeRequest = z.object({
   contentHtml: z.string().optional(),
   isPublished: z.boolean(),
   adminEmail: z.string().email(),
+  files: z.array(z.string()).default([]),
 });
 export type TCreateNoticeRequest = z.infer<typeof CreateNoticeRequest>;
 

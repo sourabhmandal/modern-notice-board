@@ -4,7 +4,6 @@ import type { TCreateNoticeRequest } from "@/app/api/notice/route";
 import { CREATE_NOTICE_API } from "@/components";
 import { useToast } from "@/components/data-display/useToast";
 import { NotificationResponse } from "@/components/utils/api.utils";
-import { S3Instance } from "@/service/S3";
 import { zodResolver } from "@hookform/resolvers/zod";
 import DescriptionIcon from "@mui/icons-material/Description";
 import {
@@ -41,7 +40,6 @@ import TextStyle from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import { generateHTML } from "@tiptap/html";
 import { EditorContent, useEditor } from "@tiptap/react";
-import { ImageNodeAttributes } from "mui-tiptap";
 import { useSession } from "next-auth/react";
 import { Dispatch, SetStateAction, Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -119,7 +117,7 @@ export function NoticeEditor({
     getValues,
     watch,
     reset,
-  } = useForm<CreateNoticeData>({
+  } = useForm<CreateNoticeFormData>({
     resolver: zodResolver(CreateNoticeSchema),
     defaultValues: {
       title: "",
@@ -210,7 +208,7 @@ export function NoticeEditor({
     }
   );
 
-  const handleOnSubmit = async (data: CreateNoticeData) => {
+  const handleOnSubmit = async (data: CreateNoticeFormData) => {
     console.log("FORM DATA ::", data);
     console.log("EDITOR CONTENT", editor?.getJSON());
     console.log(generateHTML(editor?.getJSON()!, extensions));
@@ -221,32 +219,8 @@ export function NoticeEditor({
       contentHtml: editor?.getHTML(),
       adminEmail: session.data?.user.email ?? "",
       isPublished: data.isPublished === "true" ? true : false,
+      files: [],
     });
-  };
-  // Handle file uploads and return image attributes
-  const handleUploadFiles = async (
-    files: File[]
-  ): Promise<ImageNodeAttributes[]> => {
-    const results: ImageNodeAttributes[] = [];
-
-    for (const file of files) {
-      const reader = new FileReader();
-      const promise = new Promise<ImageNodeAttributes>((resolve, reject) => {
-        reader.onload = () => {
-          const base64 = reader.result as string;
-          resolve({ src: base64 });
-        };
-        reader.onerror = (error) => reject(error);
-      });
-      reader.readAsDataURL(file);
-      const result = await promise;
-      results.push(result);
-
-      // s3 file upload
-      S3Instance.UploadFile(file.name);
-    }
-
-    return results;
   };
 
   if (open >= 0)
@@ -332,8 +306,6 @@ export function NoticeEditor({
     );
 }
 
-
-
 export const CreateNoticeSchema = z.object({
   title: z.string().min(1, {
     message: "title is required",
@@ -341,6 +313,6 @@ export const CreateNoticeSchema = z.object({
   isPublished: z.enum(["true", "false"]).default("false"),
 });
 
-type CreateNoticeData = z.infer<typeof CreateNoticeSchema>;
+export type CreateNoticeFormData = z.infer<typeof CreateNoticeSchema>;
 
 export type ValidFieldNames = "title" | "content" | "isPublished";

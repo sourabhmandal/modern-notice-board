@@ -1,6 +1,5 @@
 "use client";
 import { TGetNoticeResponse } from "@/app/api/notice/[id]/route";
-import { TGetAllNoticeResponse } from "@/app/api/notice/route";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
   Button,
@@ -16,7 +15,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { SetStateAction, useEffect } from "react";
 import useSWRMutation from "swr/mutation";
-import { DELTE_NOTICE_BY_ID_API } from "../constants/backend-routes";
+import { DELETE_NOTICE_BY_ID_API } from "../constants/backend-routes";
 import { useToast } from "../data-display/useToast";
 import { NotificationResponse, sendSwrDeleteRequest } from "../utils/api.utils";
 interface DeleteNoticeDialogProps {
@@ -24,16 +23,14 @@ interface DeleteNoticeDialogProps {
   setOpen: React.Dispatch<SetStateAction<string>>;
   currentPage: number;
   noticeList: Array<TGetNoticeResponse>;
-  setAllNoticeData: React.Dispatch<
-    SetStateAction<TGetAllNoticeResponse | undefined>
-  >;
+  updateNotices: () => void;
 }
 export function DeleteNoticeDialog({
   noticeId,
   setOpen,
   currentPage,
   noticeList,
-  setAllNoticeData,
+  updateNotices,
 }: DeleteNoticeDialogProps) {
   const toast = useToast();
   const theme = useTheme();
@@ -44,7 +41,7 @@ export function DeleteNoticeDialog({
     data: DeleteNoticeResponse,
     isMutating: isDeleteNoticeLoading,
     trigger: mutateDeleteNoticeResponse,
-  } = useSWRMutation(DELTE_NOTICE_BY_ID_API(noticeId), sendSwrDeleteRequest);
+  } = useSWRMutation(DELETE_NOTICE_BY_ID_API(noticeId), sendSwrDeleteRequest);
 
   useEffect(() => {
     if (isDeleteNoticeLoading) return;
@@ -117,7 +114,11 @@ export function DeleteNoticeDialog({
         <Button onClick={() => setOpen("")}>Cancel</Button>
         <Button
           variant="contained"
-          onClick={() => mutateDeleteNoticeResponse()}
+          onClick={() => {
+            console.log("<> OPTIMISTIC UPDATE IN DELETE BUTTON:: ");
+            updateNotices();
+            mutateDeleteNoticeResponse();
+          }}
           color="error"
           startIcon={
             isDeleteNoticeLoading ? (

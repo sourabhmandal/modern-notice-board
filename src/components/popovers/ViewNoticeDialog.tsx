@@ -72,16 +72,6 @@ export function ViewNoticeDialog({ id, setOpen }: ViewNoticeDialogProps) {
       onClose={() => setOpen("")}
       TransitionComponent={Transition}
     >
-      {isAllNoticesLoading && (
-        <Box
-          display="flex"
-          height="100vh"
-          justifyContent="center"
-          alignItems="center"
-        >
-          <CircularProgress size={80} />
-        </Box>
-      )}
       <AppBar
         sx={{
           position: "relative",
@@ -113,6 +103,16 @@ export function ViewNoticeDialog({ id, setOpen }: ViewNoticeDialogProps) {
           </IconButton>
         </Toolbar>
       </AppBar>
+      {isAllNoticesLoading && (
+        <Box
+          display="flex"
+          height="80vh"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <CircularProgress size={80} />
+        </Box>
+      )}
       <SafeHtml html={noticeData?.contentHtml ?? ""} />
     </Dialog>
   );

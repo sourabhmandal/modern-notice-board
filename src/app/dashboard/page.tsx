@@ -9,7 +9,7 @@ export default function DashboardPage() {
   const rowNos = 10;
 
   return (
-    <DashboardMainContent>
+    <DashboardMainContent heading={"Notices"}>
       <toast.ToastComponent />
       <NoticeListTable currentPage={pageNos} rowPerPage={rowNos} />
     </DashboardMainContent>
