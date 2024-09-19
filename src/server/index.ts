@@ -7,11 +7,18 @@ import postgres from "postgres";
 let db: PostgresJsDatabase<typeof demoAppSchema>;
 
 export async function initializeDb() {
-  if (db) return db;
+  if (db) {
+    console.log(
+      "*************** Returning existing database connection ***************"
+    );
+    return db;
+  }
 
   try {
     const queryClient = postgres(env.PG_DATABASE_URL, { max: 10 });
-    console.log("Initializing New database connection...");
+    console.log(
+      "*************** Initializing New database connection ***************"
+    );
 
     db = drizzle(queryClient, {
       schema: demoAppSchema,

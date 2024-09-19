@@ -4,12 +4,15 @@ import {
   TGetNoticeResponse,
 } from "@/app/api/notice/[id]/route";
 import CloseIcon from "@mui/icons-material/Close";
+import DescriptionIcon from "@mui/icons-material/Description";
+import ImageIcon from "@mui/icons-material/Image";
 import {
   alpha,
   AppBar,
   Box,
   CircularProgress,
   Dialog,
+  Grid,
   IconButton,
   Slide,
   Toolbar,
@@ -24,6 +27,12 @@ import { SafeHtml } from "../data-display/SafeHtml";
 import { useToast } from "../data-display/useToast";
 import { NotificationResponse } from "../utils/api.utils";
 
+const imageMime = ["image/pdf", "image/png", "image/jpeg"];
+const fileMime = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
 interface ViewNoticeDialogProps {
   id: string;
   setOpen: React.Dispatch<SetStateAction<string>>;
@@ -64,7 +73,6 @@ export function ViewNoticeDialog({ id, setOpen }: ViewNoticeDialogProps) {
     }
   }, [NoticesResponse]);
 
-  
   return (
     <Dialog
       fullScreen
@@ -113,6 +121,38 @@ export function ViewNoticeDialog({ id, setOpen }: ViewNoticeDialogProps) {
           <CircularProgress size={80} />
         </Box>
       )}
+      <Grid container gap={2} p={2}>
+        {[
+          ...(noticeData?.files ?? []),
+          ...(noticeData?.files ?? []),
+          ...(noticeData?.files ?? []),
+        ].map((file, idx) => (
+          <Grid item xs={3.8} key={`file-name-${file.filename}-${idx}`}>
+            <Box
+              border={1}
+              borderColor="divider"
+              display={"flex"}
+              alignItems={"center"}
+            >
+              <Box padding={2}>
+                {imageMime.includes(file.filetype) ? (
+                  <ImageIcon />
+                ) : (
+                  <DescriptionIcon />
+                )}
+              </Box>
+              <Box>
+                <Typography variant="body2">{`${
+                  file.filename.length > 40
+                    ? file.filename.split(".")[0].substring(0, 40) + "... "
+                    : file.filename.split(".")[0]
+                }.${file.filename.split(".").pop()}`}</Typography>
+                <Typography variant="body2">{file.filetype}</Typography>
+              </Box>
+            </Box>
+          </Grid>
+        ))}
+      </Grid>
       <SafeHtml html={noticeData?.contentHtml ?? ""} />
     </Dialog>
   );
