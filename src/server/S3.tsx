@@ -1,12 +1,15 @@
 import {
   CopyObjectCommand,
   DeleteObjectCommand,
-  DeleteObjectCommandInput,
   DeleteObjectCommandOutput,
+  DeleteObjectsCommand,
+  DeleteObjectsCommandInput,
+  GetObjectCommand,
   PutObjectCommand,
   PutObjectCommandOutput,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 class AwsS3 {
   private s3_instance: S3Client;
@@ -21,15 +24,19 @@ class AwsS3 {
     });
   }
 
-  async DeleteFileByFileId(
-    filePath: string
+  async DeleteFileByFilePath(
+    filePath: Array<string>
   ): Promise<DeleteObjectCommandOutput> {
-    const deleteParams: DeleteObjectCommandInput = {
+    const deleteParams: DeleteObjectsCommandInput = {
       Bucket: process.env.AIT_AWS_BUCKET_ID,
-      Key: filePath,
+      Delete: {
+        Objects: filePath.map((fp) => ({
+          Key: fp,
+        })),
+      },
     };
 
-    const command = new DeleteObjectCommand(deleteParams);
+    const command = new DeleteObjectsCommand(deleteParams);
     return this.s3_instance.send(command);
   }
 
@@ -69,6 +76,25 @@ class AwsS3 {
       return this.s3_instance.send(deleteCommand);
     } catch (error) {
       console.error("Error moving file:", error);
+    }
+  }
+
+  async getDownloadUrl(filepath: string, expiresIn = 3600) {
+    try {
+      const command = new GetObjectCommand({
+        Bucket: process.env.AIT_AWS_BUCKET_ID,
+        Key: filepath,
+      });
+
+      // Generate the presigned URL
+      const presignedUrl = await getSignedUrl(this.s3_instance, command, {
+        expiresIn,
+      });
+
+      return presignedUrl;
+    } catch (err) {
+      console.error("Error generating presigned URL", err);
+      throw err;
     }
   }
 }

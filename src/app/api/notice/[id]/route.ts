@@ -1,23 +1,11 @@
 import { TNotificationResponse } from "@/components/utils/api.utils";
 import { initializeDb } from "@/server";
 import { attachments, notices } from "@/server/model/notice";
-import {
-  DeleteObjectsCommand,
-  DeleteObjectsCommandInput,
-  S3Client,
-} from "@aws-sdk/client-s3";
+import { S3Instance } from "@/server/S3";
 
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-
-const s3Client = new S3Client({
-  region: process.env.AIT_AWS_REGION!,
-  credentials: {
-    accessKeyId: process.env.AIT_AWS_ACCESS_KEY!,
-    secretAccessKey: process.env.AIT_AWS_SECRET_ACCESS_KEY!,
-  },
-});
 
 async function getNoticeByIdHandler(
   req: Request,
@@ -57,10 +45,22 @@ async function getNoticeByIdHandler(
       .from(attachments)
       .where(eq(attachments.noticeid, noticeId));
 
+    const attachmentsResponse = await Promise.allSettled(
+      attachmentsData.map(async (attachment) => ({
+        filename: attachment.filename,
+        download: await S3Instance.getDownloadUrl(attachment.filepath),
+        noticeid: attachment.noticeid,
+        filetype: attachment.filetype,
+      }))
+    );
+
+    const attachmentsResponseData = attachmentsResponse
+      .filter((attachment) => attachment.status === "fulfilled")
+      .map((attachment) => attachment.value);
     return NextResponse.json(
       {
         ...data,
-        files: attachmentsData,
+        files: attachmentsResponseData,
       } as TGetNoticeResponse,
       {
         status: 200,
@@ -106,18 +106,9 @@ async function deleteNoticeHandler(
       .from(attachments)
       .where(eq(attachments.noticeid, noticeId));
 
-    const deleteParams: DeleteObjectsCommandInput = {
-      Bucket: process.env.AIT_AWS_BUCKET_ID,
-      Delete: {
-        Objects: allAttachmentsOfNotice.map((key) => ({
-          Key: key.filepath,
-        })),
-      },
-    };
-
-    const command = new DeleteObjectsCommand(deleteParams);
-
-    await s3Client.send(command);
+    await S3Instance.DeleteFileByFilePath(
+      allAttachmentsOfNotice.map((attachment) => attachment.filepath)
+    );
 
     const deletedAllAttachmentRef = await db
       .delete(attachments)
@@ -158,7 +149,7 @@ export const GetNoticeResponse = z.object({
     .array(
       z.object({
         filename: z.string(),
-        filepath: z.string(),
+        download: z.string(),
         noticeid: z.string(),
         filetype: z.string(),
       })

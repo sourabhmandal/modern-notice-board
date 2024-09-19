@@ -106,7 +106,7 @@ async function deleteUploadedFileHandler(req: NextRequest) {
       validatedFields.data.file_path.map(async (filePath) => {
         return {
           filepath: filePath,
-          s3_response: await S3Instance.DeleteFileByFileId(filePath),
+          s3_response: await S3Instance.DeleteFileByFilePath(filePath),
         };
       })
     );

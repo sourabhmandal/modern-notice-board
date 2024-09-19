@@ -12,7 +12,6 @@ import { z } from "zod";
 import { GetNoticeResponse } from "./[id]/route";
 
 async function createNoticeHandler(request: Request) {
-  console.log("createNoticeHandler");
   try {
     const reqData = await request.json();
     const validatedFields = CreateNoticeRequest.safeParse(reqData);
