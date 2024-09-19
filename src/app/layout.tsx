@@ -1,8 +1,4 @@
-import {
-  ReactQueryClientProvider,
-  SWRProvider,
-  ThemeModeProvider,
-} from "@/components";
+import { SWRProvider, ThemeModeProvider } from "@/components";
 import { SessionProvider } from "next-auth/react";
 
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
@@ -22,15 +18,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={GeistSans.className}>
-        <ReactQueryClientProvider>
-          <SWRProvider>
-            <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-              <ThemeModeProvider>
-                <SessionProvider>{children}</SessionProvider>
-              </ThemeModeProvider>
-            </AppRouterCacheProvider>
-          </SWRProvider>
-        </ReactQueryClientProvider>
+        <SWRProvider>
+          <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+            <ThemeModeProvider>
+              <SessionProvider>{children}</SessionProvider>
+            </ThemeModeProvider>
+          </AppRouterCacheProvider>
+        </SWRProvider>
       </body>
     </html>
   );

@@ -18,7 +18,6 @@ export {
   REGISTER_API,
   UPLOAD_FILE_BY_NOTICE_ID_API,
 } from "@/components/constants/backend-routes";
-export { ReactQueryClientProvider } from "@/components/context/ReactQueryClientProvider";
 export { SWRProvider } from "@/components/context/SWRProvider";
 export { SignOutButton } from "./button/SignOutButton";
 export { ToggleMode } from "./button/ToggleMode";
