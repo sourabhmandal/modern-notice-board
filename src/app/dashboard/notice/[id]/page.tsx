@@ -8,7 +8,7 @@ export default function DashboardPage() {
   return (
     <DashboardMainContent heading={"Create Notice"}>
       <Typography variant="h5" mb={2}>
-        <NoticeEditorMui open={open} setOpen={setOpen} />
+        <NoticeEditorMui open={open} setOpen={setOpen} mode={"edit"} />
       </Typography>
     </DashboardMainContent>
   );

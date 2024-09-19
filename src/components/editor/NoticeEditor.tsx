@@ -4,15 +4,11 @@ import type { TCreateNoticeRequest } from "@/app/api/notice/route";
 import { CREATE_NOTICE_API } from "@/components";
 import { useToast } from "@/components/data-display/useToast";
 import { NotificationResponse } from "@/components/utils/api.utils";
-import { S3Instance } from "@/service/S3";
 import { zodResolver } from "@hookform/resolvers/zod";
-import CloseIcon from "@mui/icons-material/Close";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DescriptionIcon from "@mui/icons-material/Description";
 import {
   Box,
   Button,
-  Card,
   CircularProgress,
   FormControl,
   FormControlLabel,
@@ -20,7 +16,6 @@ import {
   Radio,
   RadioGroup,
   TextField,
-  Typography,
   useTheme,
 } from "@mui/material";
 import Bold from "@tiptap/extension-bold";
@@ -44,36 +39,15 @@ import TextAlign from "@tiptap/extension-text-align";
 import TextStyle from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import { generateHTML } from "@tiptap/html";
-import {
-  ImageNodeAttributes,
-  MenuButtonAlignCenter,
-  MenuButtonAlignLeft,
-  MenuButtonAlignRight,
-  MenuButtonBold,
-  MenuButtonBulletedList,
-  MenuButtonHighlightColor,
-  MenuButtonHorizontalRule,
-  MenuButtonImageUpload,
-  MenuButtonItalic,
-  MenuButtonOrderedList,
-  MenuButtonStrikethrough,
-  MenuButtonSubscript,
-  MenuButtonSuperscript,
-  MenuButtonUnderline,
-  MenuControlsContainer,
-  MenuDivider,
-  MenuSelectFontFamily,
-  MenuSelectHeading,
-  RichTextEditor,
-  type RichTextEditorRef,
-} from "mui-tiptap";
+import { EditorContent, useEditor } from "@tiptap/react";
 import { useSession } from "next-auth/react";
-import { Dispatch, SetStateAction, Suspense, useRef } from "react";
+import { Dispatch, SetStateAction, Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import useSWRMutation from "swr/mutation";
 import { z } from "zod";
 import { sendSwrPostRequest } from "../utils/api.utils";
-import css from "./editor.module.css";
+import styles from "./editor.module.css";
+import { Toolbar } from "./Toolbar";
 
 interface NoticeEditorProps {
   open: number;
@@ -95,7 +69,11 @@ const extensions = [
   Highlight,
   Strike,
   TextAlign,
-  LinkBubbleMenuHandler,
+  LinkBubbleMenuHandler.configure({
+    openOnClick: false,
+    autolink: true,
+    defaultProtocol: "https",
+  }),
   HorizontalRule,
   UnorderList,
   OrderedList,
@@ -111,11 +89,25 @@ export function NoticeEditor({
   mode = "create",
   noticeId,
 }: NoticeEditorProps) {
-  const rteRef = useRef<RichTextEditorRef>(null);
   const session = useSession();
   const toast = useToast();
   const theme = useTheme();
-  const s3 = S3Instance.GetS3();
+  const [editorContent, setEditorContent] = useState<string>(
+    "<p>Hello World! 🌎️</p>"
+  );
+
+  const editor = useEditor({
+    extensions: extensions,
+    content: editorContent,
+    onUpdate: ({ editor }) => {
+      setEditorContent(editor.getHTML());
+    },
+    editorProps: {
+      attributes: {
+        class: styles.editorContent,
+      },
+    },
+  });
 
   const {
     register,
@@ -125,7 +117,7 @@ export function NoticeEditor({
     getValues,
     watch,
     reset,
-  } = useForm<CreateNoticeData>({
+  } = useForm<CreateNoticeFormData>({
     resolver: zodResolver(CreateNoticeSchema),
     defaultValues: {
       title: "",
@@ -133,49 +125,50 @@ export function NoticeEditor({
     },
   });
 
-  const PreviewsRemoteFiles = form.values.attachments?.map((file, index) => {
-    return (
-      <Card
-        key={file.fileid}
-        sx={{
-          border: "1px solid #ccc",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: 4,
-        }}
-      >
-        <CloudUploadIcon />
-        <div style={{ marginLeft: 6 }}>
-          <Typography variant="subtitle1">{file.filename}</Typography>
-          <Typography color="text.secondary" variant="subtitle1">
-            {file.filetype}
-          </Typography>
-        </div>
-        <ActionIcon
-          variant="light"
-          onClick={() => {
-            // remove from aws files
-            deleteNoticeByFileId.mutate(
-              { noticeId: id, filename: file.filename },
-              {
-                onSuccess(variables, context) {
-                  showNotification({
-                    message: `${context.filename} deleted`,
-                  });
-                  trpcContext.notice.noticeDetail.invalidate();
-                },
-              }
-            );
-          }}
-        >
-          <CloseIcon />
-        </ActionIcon>
-      </Card>
-    );
-  });
+  // const PreviewsRemoteFiles = form.values.attachments?.map((file, index) => {
+  //   return (
+  //     <Card
+  //       key={file.fileid}
+  //       sx={{
+  //         border: "1px solid #ccc",
+  //         display: "flex",
+  //         alignItems: "center",
+  //         justifyContent: "space-between",
+  //         padding: 4,
+  //       }}
+  //     >
+  //       <CloudUploadIcon />
+  //       <div style={{ marginLeft: 6 }}>
+  //         <Typography variant="subtitle1">{file.filename}</Typography>
+  //         <Typography color="text.secondary" variant="subtitle1">
+  //           {file.filetype}
+  //         </Typography>
+  //       </div>
+  //       <ActionIcon
+  //         variant="light"
+  //         onClick={() => {
+  //           // remove from aws files
+  //           deleteNoticeByFileId.mutate(
+  //             { noticeId: id, filename: file.filename },
+  //             {
+  //               onSuccess(variables, context) {
+  //                 showNotification({
+  //                   message: `${context.filename} deleted`,
+  //                 });
+  //                 trpcContext.notice.noticeDetail.invalidate();
+  //               },
+  //             }
+  //           );
+  //         }}
+  //       >
+  //         <CloseIcon />
+  //       </ActionIcon>
+  //     </Card>
+  //   );
+  // });
 
   // create a notice
+
   const {
     data: createNoticeResponse,
     error: createNoticeError,
@@ -215,43 +208,19 @@ export function NoticeEditor({
     }
   );
 
-  const handleOnSubmit = async (data: CreateNoticeData) => {
+  const handleOnSubmit = async (data: CreateNoticeFormData) => {
     console.log("FORM DATA ::", data);
-    console.log("EDITOR CONTENT", rteRef.current?.editor?.getJSON());
-    console.log(generateHTML(rteRef.current?.editor?.getJSON()!, extensions));
+    console.log("EDITOR CONTENT", editor?.getJSON());
+    console.log(generateHTML(editor?.getJSON()!, extensions));
 
     createNoticePostApiCall({
       title: data.title,
-      content: JSON.stringify(rteRef.current?.editor?.getJSON()),
-      contentHtml: rteRef.current?.editor?.getHTML(),
+      content: JSON.stringify(editor?.getJSON()),
+      contentHtml: editor?.getHTML(),
       adminEmail: session.data?.user.email ?? "",
       isPublished: data.isPublished === "true" ? true : false,
+      files: [],
     });
-  };
-  // Handle file uploads and return image attributes
-  const handleUploadFiles = async (
-    files: File[]
-  ): Promise<ImageNodeAttributes[]> => {
-    const results: ImageNodeAttributes[] = [];
-
-    for (const file of files) {
-      const reader = new FileReader();
-      const promise = new Promise<ImageNodeAttributes>((resolve, reject) => {
-        reader.onload = () => {
-          const base64 = reader.result as string;
-          resolve({ src: base64 });
-        };
-        reader.onerror = (error) => reject(error);
-      });
-      reader.readAsDataURL(file);
-      const result = await promise;
-      results.push(result);
-
-      // s3 file upload
-      S3Instance.UploadFile(file.name);
-    }
-
-    return results;
   };
 
   if (open >= 0)
@@ -284,47 +253,8 @@ export function NoticeEditor({
               height: "40vh",
             }}
           >
-            <RichTextEditor
-              ref={rteRef}
-              className={css.editorContent}
-              extensions={extensions}
-              content="<p>Hello world</p>"
-              renderControls={() => (
-                <MenuControlsContainer>
-                  <MenuSelectFontFamily
-                    options={[
-                      { value: "Arial", label: "Arial" },
-                      { value: "Courier New", label: "Courier New" },
-                      { value: "Georgia", label: "Georgia" },
-                      { value: "Times New Roman", label: "Times New Roman" },
-                      { value: "Verdana", label: "Verdana" },
-                    ]}
-                  />
-                  <MenuDivider />
-                  <MenuSelectHeading />
-                  <MenuDivider />
-                  <MenuButtonBold />
-                  <MenuButtonItalic />
-                  <MenuButtonUnderline />
-                  <MenuButtonHighlightColor />
-                  <MenuButtonStrikethrough />
-                  <MenuDivider />
-                  <MenuButtonBulletedList />
-                  <MenuButtonOrderedList />
-                  <MenuDivider />
-                  <MenuButtonAlignLeft />
-                  <MenuButtonAlignCenter />
-                  <MenuButtonAlignRight />
-                  <MenuDivider />
-                  <MenuButtonSubscript />
-                  <MenuButtonSuperscript />
-                  <MenuDivider />
-                  <MenuButtonHorizontalRule />
-                  <MenuButtonImageUpload onUploadFiles={handleUploadFiles} />
-                  <MenuDivider />
-                </MenuControlsContainer>
-              )}
-            />
+            <Toolbar editor={editor} />
+            <EditorContent editor={editor} />
           </Box>
 
           <FormControl sx={{ mt: 2 }}>
@@ -376,8 +306,6 @@ export function NoticeEditor({
     );
 }
 
-
-
 export const CreateNoticeSchema = z.object({
   title: z.string().min(1, {
     message: "title is required",
@@ -385,6 +313,6 @@ export const CreateNoticeSchema = z.object({
   isPublished: z.enum(["true", "false"]).default("false"),
 });
 
-type CreateNoticeData = z.infer<typeof CreateNoticeSchema>;
+export type CreateNoticeFormData = z.infer<typeof CreateNoticeSchema>;
 
 export type ValidFieldNames = "title" | "content" | "isPublished";

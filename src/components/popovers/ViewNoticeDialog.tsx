@@ -4,12 +4,16 @@ import {
   TGetNoticeResponse,
 } from "@/app/api/notice/[id]/route";
 import CloseIcon from "@mui/icons-material/Close";
+import DescriptionIcon from "@mui/icons-material/Description";
+import ImageIcon from "@mui/icons-material/Image";
 import {
   alpha,
   AppBar,
   Box,
   CircularProgress,
   Dialog,
+  Divider,
+  Grid,
   IconButton,
   Slide,
   Toolbar,
@@ -24,6 +28,12 @@ import { SafeHtml } from "../data-display/SafeHtml";
 import { useToast } from "../data-display/useToast";
 import { NotificationResponse } from "../utils/api.utils";
 
+const imageMime = ["image/pdf", "image/png", "image/jpeg"];
+const fileMime = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
 interface ViewNoticeDialogProps {
   id: string;
   setOpen: React.Dispatch<SetStateAction<string>>;
@@ -64,7 +74,6 @@ export function ViewNoticeDialog({ id, setOpen }: ViewNoticeDialogProps) {
     }
   }, [NoticesResponse]);
 
-  
   return (
     <Dialog
       fullScreen
@@ -72,16 +81,6 @@ export function ViewNoticeDialog({ id, setOpen }: ViewNoticeDialogProps) {
       onClose={() => setOpen("")}
       TransitionComponent={Transition}
     >
-      {isAllNoticesLoading && (
-        <Box
-          display="flex"
-          height="100vh"
-          justifyContent="center"
-          alignItems="center"
-        >
-          <CircularProgress size={80} />
-        </Box>
-      )}
       <AppBar
         sx={{
           position: "relative",
@@ -113,6 +112,57 @@ export function ViewNoticeDialog({ id, setOpen }: ViewNoticeDialogProps) {
           </IconButton>
         </Toolbar>
       </AppBar>
+      {isAllNoticesLoading && (
+        <Box
+          display="flex"
+          height="80vh"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <CircularProgress size={80} />
+        </Box>
+      )}
+      <Grid container gap={2} p={2}>
+        {noticeData?.files &&
+          noticeData.files.map((file, idx) => (
+            <Grid item xs={3.8} key={`file-name-${file.filename}-${idx}`}>
+              <Box
+                border={1}
+                borderColor="divider"
+                display={"flex"}
+                alignItems={"center"}
+                onClick={() => {
+                  window.open(file.download);
+                }}
+                sx={{
+                  cursor: "pointer",
+                  borderRadius: 1,
+                  "&:hover": {
+                    backgroundColor: "rgba(0, 0, 0, 0.04)", // light gray on hover
+                    borderColor: "primary.main",
+                  },
+                }}
+              >
+                <Box padding={2}>
+                  {imageMime.includes(file.filetype) ? (
+                    <ImageIcon />
+                  ) : (
+                    <DescriptionIcon />
+                  )}
+                </Box>
+                <Box>
+                  <Typography variant="body2">{`${
+                    file.filename.length > 40
+                      ? file.filename.split(".")[0].substring(0, 40) + "... "
+                      : file.filename.split(".")[0]
+                  }.${file.filename.split(".").pop()}`}</Typography>
+                  <Typography variant="body2">{file.filetype}</Typography>
+                </Box>
+              </Box>
+            </Grid>
+          ))}
+      </Grid>
+      <Divider />
       <SafeHtml html={noticeData?.contentHtml ?? ""} />
     </Dialog>
   );

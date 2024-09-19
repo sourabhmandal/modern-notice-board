@@ -1,8 +1,6 @@
 "use client";
-import {
-  GetAllNoticeResponse,
-  TGetAllNoticeResponse,
-} from "@/app/api/notice/route";
+import { TGetNoticeResponse } from "@/app/api/notice/[id]/route";
+import { GetAllNoticeResponse } from "@/app/api/notice/route";
 import { useToast, ViewNoticeDialog } from "@/components";
 import { GET_ALL_NOTICE_API } from "@/components/constants/backend-routes";
 import { DeleteNoticeDialog } from "@/components/popovers/DeleteNoticeDialog";
@@ -26,14 +24,6 @@ import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import useSWR from "swr";
-
-export interface IListTableItem {
-  id: string;
-  title: string;
-  subtitle: string;
-  isPublished: boolean;
-  adminEmail?: string;
-}
 export interface IListTable {
   currentPage: number;
   rowPerPage: number;
@@ -43,23 +33,33 @@ export function NoticeListTable({ currentPage, rowPerPage }: IListTable) {
   const router = useRouter();
   const theme = useTheme();
   const toast = useToast();
-  const [allNoticeData, setAllNoticeData] = useState<TGetAllNoticeResponse>();
   const [selectedViewNoticeId, setSelectedViewNoticeId] = useState("");
   const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
   const [toDeleteNoticeId, setToDeleteNoticeId] = useState<string>("");
 
-  const { data: AllNoticesResponse, isLoading: isAllNoticesLoading } = useSWR(
-    GET_ALL_NOTICE_API(currentPage),
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      refreshInterval: 20000,
-    }
-  );
+  const {
+    data: AllNoticesResponse,
+    isLoading: isAllNoticesLoading,
+    mutate: mutateAllNoticeList,
+  } = useSWR(GET_ALL_NOTICE_API(currentPage), {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    refreshInterval: 20000,
+    onError(error, key, config) {
+      console.error("get all notice error :: ", error);
+      toast.showToast(
+        "Failed to fetch all notices",
+        "server error occured",
+        "error"
+      );
+    },
+  });
+
+  const [optimisticNotice, updateOptimisticNotice] = useState<
+    Array<TGetNoticeResponse>
+  >(AllNoticesResponse?.notices);
 
   useEffect(() => {
-    if (isAllNoticesLoading) return;
-
     const parsedErrorResponse =
       NotificationResponse.safeParse(AllNoticesResponse);
 
@@ -73,8 +73,7 @@ export function NoticeListTable({ currentPage, rowPerPage }: IListTable) {
     const parsedResponse = GetAllNoticeResponse.safeParse(AllNoticesResponse);
 
     if (parsedResponse.success) {
-      setAllNoticeData(parsedResponse.data);
-      console.log(parsedResponse.data);
+      updateOptimisticNotice(parsedResponse.data.notices);
     } else if (parsedResponse.success === false && !isAllNoticesLoading) {
       toast.showToast(
         "Failed to fetch all notices",
@@ -84,6 +83,19 @@ export function NoticeListTable({ currentPage, rowPerPage }: IListTable) {
     }
   }, [AllNoticesResponse]);
 
+  const handleNoticeOptimisticUpdate = async () => {
+    const optimisticData = optimisticNotice?.filter(
+      (d) => d.id !== toDeleteNoticeId
+    );
+    await mutateAllNoticeList(updateOptimisticNotice([...optimisticData]), {
+      optimisticData: [...optimisticData],
+      rollbackOnError: true,
+      populateCache: true,
+      revalidate: false,
+    });
+    setToDeleteNoticeId("");
+  };
+
   return (
     <Box>
       {toDeleteNoticeId && (
@@ -91,8 +103,8 @@ export function NoticeListTable({ currentPage, rowPerPage }: IListTable) {
           noticeId={toDeleteNoticeId}
           setOpen={setToDeleteNoticeId}
           currentPage={currentPage}
-          noticeList={allNoticeData?.notices ?? []}
-          setAllNoticeData={setAllNoticeData}
+          noticeList={optimisticNotice ?? []}
+          updateNotices={handleNoticeOptimisticUpdate}
         />
       )}
       {selectedViewNoticeId && (
@@ -113,59 +125,60 @@ export function NoticeListTable({ currentPage, rowPerPage }: IListTable) {
         }}
         dense
       >
-        {allNoticeData?.notices.slice(0, rowPerPage).map((item, index) => (
-          <React.Fragment key={`list-item-${item.id}`}>
-            <ListItem
-              sx={{ padding: 0 }}
-              secondaryAction={
-                <Box
-                  gap={2}
-                  display="flex"
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <IconButton
-                    edge="end"
-                    color="warning"
-                    aria-label="update"
-                    onClick={() => setSelectedViewNoticeId(item.id)}
+        {optimisticNotice &&
+          optimisticNotice?.slice(0, rowPerPage).map((item, index) => (
+            <React.Fragment key={`list-item-${item.id}`}>
+              <ListItem
+                sx={{ padding: 0 }}
+                secondaryAction={
+                  <Box
+                    gap={2}
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
                   >
-                    <DriveFileRenameOutlineTwoToneIcon />
-                  </IconButton>
-                  <IconButton
-                    edge="end"
-                    color="error"
-                    aria-label="delete"
-                    onClick={() => setToDeleteNoticeId(item.id)}
-                  >
-                    <DeleteOutlineTwoToneIcon />
-                  </IconButton>
-                </Box>
-              }
-            >
-              <ListItemButton
-                alignItems="flex-start"
-                onClick={() => setSelectedViewNoticeId(item.id)}
-              >
-                <ListItemText
-                  primary={
-                    <Typography color="text.primary">{item.title}</Typography>
-                  }
-                  secondary={
-                    <Typography
-                      component="span"
-                      variant="body2"
-                      sx={{ color: alpha(theme.palette.text.secondary, 0.4) }}
+                    <IconButton
+                      edge="end"
+                      color="warning"
+                      aria-label="update"
+                      onClick={() => setSelectedViewNoticeId(item.id)}
                     >
-                      {`from ${item.adminEmail}`}
-                    </Typography>
-                  }
-                />
-              </ListItemButton>
-            </ListItem>
-            {index === rowPerPage - 1 ? null : <Divider />}
-          </React.Fragment>
-        ))}
+                      <DriveFileRenameOutlineTwoToneIcon />
+                    </IconButton>
+                    <IconButton
+                      edge="end"
+                      color="error"
+                      aria-label="delete"
+                      onClick={() => setToDeleteNoticeId(item.id)}
+                    >
+                      <DeleteOutlineTwoToneIcon />
+                    </IconButton>
+                  </Box>
+                }
+              >
+                <ListItemButton
+                  alignItems="flex-start"
+                  onClick={() => setSelectedViewNoticeId(item.id)}
+                >
+                  <ListItemText
+                    primary={
+                      <Typography color="text.primary">{item.title}</Typography>
+                    }
+                    secondary={
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        sx={{ color: alpha(theme.palette.text.secondary, 0.4) }}
+                      >
+                        {`from ${item.adminEmail}`}
+                      </Typography>
+                    }
+                  />
+                </ListItemButton>
+              </ListItem>
+              {index === rowPerPage - 1 ? null : <Divider />}
+            </React.Fragment>
+          ))}
       </List>
       <Divider />
       <Box
@@ -181,7 +194,7 @@ export function NoticeListTable({ currentPage, rowPerPage }: IListTable) {
       >
         <Pagination
           size={isSmall ? "small" : "medium"}
-          count={Math.ceil((allNoticeData?.totalCount ?? 0) / rowPerPage)}
+          count={Math.ceil((AllNoticesResponse?.totalCount ?? 0) / rowPerPage)}
           page={currentPage}
           variant="outlined"
           shape="rounded"
@@ -194,3 +207,7 @@ export function NoticeListTable({ currentPage, rowPerPage }: IListTable) {
     </Box>
   );
 }
+function updateOptimisticNotice(arg0: any[]): any {
+  throw new Error("Function not implemented.");
+}
+

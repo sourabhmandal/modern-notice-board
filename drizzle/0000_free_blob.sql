@@ -13,6 +13,13 @@ CREATE TABLE IF NOT EXISTS "account" (
 	CONSTRAINT "account_provider_providerAccountId_pk" PRIMARY KEY("provider","providerAccountId")
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "attachment" (
+	"filepath" text PRIMARY KEY NOT NULL,
+	"filename" text NOT NULL,
+	"noticeid" text NOT NULL,
+	"filetype" text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "authenticator" (
 	"credentialID" text NOT NULL,
 	"userId" text NOT NULL,
@@ -24,6 +31,17 @@ CREATE TABLE IF NOT EXISTS "authenticator" (
 	"transports" text,
 	CONSTRAINT "authenticator_userId_credentialID_pk" PRIMARY KEY("userId","credentialID"),
 	CONSTRAINT "authenticator_credentialID_unique" UNIQUE("credentialID")
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "notices" (
+	"id" text PRIMARY KEY NOT NULL,
+	"adminEmail" text,
+	"isPublished" boolean NOT NULL,
+	"title" text NOT NULL,
+	"content" jsonb NOT NULL,
+	"contentHtml" text,
+	"createdAt" timestamp DEFAULT now(),
+	"updatedAt" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "session" (
@@ -40,7 +58,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 	"emailVerified" timestamp,
 	"status" text DEFAULT 'PENDING' NOT NULL,
 	"image" text,
-	"role" text DEFAULT 'USER' NOT NULL,
+	"role" text DEFAULT 'STUDENT' NOT NULL,
 	CONSTRAINT "user_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint

@@ -7,7 +7,7 @@ export default function DashboardPage() {
   const theme = useTheme();
 
   return (
-    <DashboardMainContent>
+    <DashboardMainContent heading={"Student Resources"}>
       <Typography variant="h5" mb={2}>
         RESOURCES
       </Typography>

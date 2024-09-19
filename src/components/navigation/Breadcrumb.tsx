@@ -15,7 +15,7 @@ export function Breadcrumb({ path }: BreadcrumbProps) {
 
   useEffect(() => {
     if (window) setPathname(path.split("/").filter((x) => x));
-  }, [window.location.pathname]);
+  }, []);
 
   return (
     <Box

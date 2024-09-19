@@ -1,5 +1,5 @@
 {
-  "id": "f56bb051-2009-483f-b1b1-ac26fe0dfd82",
+  "id": "66ca5c3e-535c-4f12-95b7-4549108a656e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -102,6 +102,40 @@
       },
       "uniqueConstraints": {}
     },
+    "public.attachment": {
+      "name": "attachment",
+      "schema": "",
+      "columns": {
+        "filepath": {
+          "name": "filepath",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "filename": {
+          "name": "filename",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "noticeid": {
+          "name": "noticeid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "filetype": {
+          "name": "filetype",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "public.authenticator": {
       "name": "authenticator",
       "schema": "",
@@ -189,6 +223,66 @@
           ]
         }
       }
+    },
+    "public.notices": {
+      "name": "notices",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "adminEmail": {
+          "name": "adminEmail",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isPublished": {
+          "name": "isPublished",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contentHtml": {
+          "name": "contentHtml",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
     },
     "public.session": {
       "name": "session",
@@ -284,7 +378,7 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'USER'"
+          "default": "'STUDENT'"
         }
       },
       "indexes": {},

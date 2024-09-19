@@ -7,6 +7,19 @@ export async function sendSwrPostRequest<T>(url: string, { arg }: { arg: T }) {
   }).then((res) => res.json());
 }
 
+export async function sendSwrFormDataRequest<T>(
+  url: string,
+  { arg }: { arg: T }
+) {
+  return fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    body: JSON.stringify(arg),
+  }).then((res) => res.json());
+}
+
 export async function sendSwrDeleteRequest(url: string) {
   return fetch(url, {
     method: "DELETE",

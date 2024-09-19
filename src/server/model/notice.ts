@@ -1,16 +1,19 @@
 import { relations } from "drizzle-orm";
 import { boolean, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 import { users } from "./auth";
 
 export const attachments = pgTable("attachment", {
-  fileid: text("fileid").primaryKey(),
-  noticeid: text("noticeid").notNull(),
+  filepath: text("filepath").notNull().primaryKey(),
   filename: text("filename").notNull(),
+  noticeid: text("noticeid").notNull(),
   filetype: text("filetype").notNull(),
 });
 export const insertAttachmentSchema = createInsertSchema(attachments);
+export type TInsertAttachmentSchema = z.infer<typeof insertAttachmentSchema>;
 export const selectAttachmentSchema = createSelectSchema(attachments);
+export type TSelectAttachmentSchema = z.infer<typeof selectAttachmentSchema>;
 
 export const notices = pgTable("notices", {
   id: text("id")
