@@ -2,16 +2,39 @@ import { TNotificationResponse } from "@/components/utils/api.utils";
 import { initializeDb } from "@/server";
 import { attachments, TInsertAttachmentSchema } from "@/server/model/notice";
 import { S3Instance } from "@/server/S3";
-import { inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 async function uploadFileHandler(req: NextRequest) {
   try {
     const formData = await req.formData(); // Parse the form data
-    const files = formData.getAll("file") as Array<File>; // Access the file
 
+    let files = formData.getAll("file") as Array<File>; // Access the file
+    const noticeId = formData.get("noticeId") as string; // Access the noticeId
     const db = await initializeDb();
+
+    if (!noticeId)
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "No noticeId provided",
+        } as TNotificationResponse,
+        { status: 400 }
+      );
+
+    if (!files)
+      return NextResponse.json(
+        {
+          status: "warning",
+          message: "No file uploaded",
+        } as TNotificationResponse,
+        { status: 400 }
+      );
+
+    if (!Array.isArray(files)) {
+      files = [files];
+    }
 
     if (files.length < 1) {
       return NextResponse.json(
@@ -24,46 +47,81 @@ async function uploadFileHandler(req: NextRequest) {
     }
 
     // Upload the file to S3
-    const resolved = await Promise.allSettled(
+    const savedAttachmentResult = await Promise.allSettled(
       files.map(async (file) => {
-        return {
-          file_name: file.name,
-          file_path: `temp-uploads/${file.name}`,
-          file_type: file.type,
-          s3_response: await S3Instance.UploadFile(file),
-        };
+        // upload in s3
+        await S3Instance.UploadFile(noticeId, file);
+
+        // create entry in attachments table
+        return db
+          .insert(attachments)
+          .values({
+            filepath: `${noticeId}/${file.name}`,
+            filename: file.name,
+            filetype: file.type,
+            noticeid: `${noticeId}`,
+          } as TInsertAttachmentSchema)
+          .onConflictDoNothing({
+            target: [attachments.filepath],
+          })
+          .returning();
       })
     );
 
-    await db
-      .insert(attachments)
-      .values(
-        resolved
-          .filter((fulRes) => fulRes.status == "fulfilled")
-          .map(
-            (res) =>
-              ({
-                filepath: res.value.file_path,
-                filename: res.value.file_name,
-                filetype: res.value.file_type,
-                noticeid: "temp-uploads",
-              } as TInsertAttachmentSchema)
-          )
-      )
-      .onConflictDoNothing({
-        target: [attachments.filepath],
-      });
+    const allFilesInNoticeFromS3 = await S3Instance.GetFilesByFolder(
+      `${noticeId}`
+    );
+
+    if (
+      allFilesInNoticeFromS3.Contents &&
+      allFilesInNoticeFromS3.Contents.length > 0
+    ) {
+      const finalizedUploadedFilesWithDownloadLink = await Promise.allSettled(
+        allFilesInNoticeFromS3.Contents.map(async (remoteFile) => {
+          const fileInAttachmentDb = await db
+            .select()
+            .from(attachments)
+            .where(eq(attachments.filepath, remoteFile.Key!));
+
+          if (!fileInAttachmentDb || fileInAttachmentDb.length < 1) {
+            return;
+          }
+          return {
+            filename: fileInAttachmentDb[0].filename,
+            download: await S3Instance.getDownloadUrl(
+              fileInAttachmentDb[0].filepath
+            ),
+            filetype: fileInAttachmentDb[0].filetype,
+            filepath: fileInAttachmentDb[0].filepath,
+          };
+        })
+      );
+
+      console.log(
+        "All files in notice:",
+        finalizedUploadedFilesWithDownloadLink
+          .filter((res) => res.status === "fulfilled")
+          .map((res) => res.value)
+      );
+
+      return NextResponse.json(
+        {
+          uploads: finalizedUploadedFilesWithDownloadLink
+            .filter((res) => res.status === "fulfilled")
+            .map((res) => res.value),
+          uploadedFilesCount: files.length,
+          totalFilesCount: finalizedUploadedFilesWithDownloadLink.filter(
+            (res) => res.status === "fulfilled"
+          ).length,
+        } as TUploadFileResponse,
+        { status: 200 }
+      );
+    }
 
     return NextResponse.json(
       {
-        uploads: resolved
-          .filter((result) => result.status === "fulfilled")
-          .map((res) => ({
-            file_name: res.value.file_name,
-            upload_status: res.status,
-          })),
-        uploadedFilesCount: resolved.filter((res) => res.status === "fulfilled")
-          .length,
+        uploads: [],
+        uploadedFilesCount: 0,
         totalFilesCount: files.length,
       } as TUploadFileResponse,
       { status: 200 }
@@ -102,26 +160,24 @@ async function deleteUploadedFileHandler(req: NextRequest) {
 
     const db = await initializeDb();
 
-    const data = await Promise.allSettled(
-      validatedFields.data.file_path.map(async (filePath) => {
-        return {
-          filepath: filePath,
-          s3_response: await S3Instance.DeleteFileByFilePath(filePath),
-        };
-      })
+    const deleteS3Response = await S3Instance.DeleteFileByFilePath(
+      validatedFields.data.file_path
     );
+
+    if (deleteS3Response.DeleteMarker) {
+      console.log("File was deleted (DeleteMarker is set):", deleteS3Response);
+    } else if (deleteS3Response.VersionId) {
+      console.log("File was deleted (versioned delete):", deleteS3Response);
+    } else {
+      console.log(
+        "File deleted successfully (no versioning):",
+        deleteS3Response
+      );
+    }
 
     await db
       .delete(attachments)
-      .where(
-        inArray(
-          attachments.filepath,
-          data
-            .filter((fulRej) => fulRej.status == "fulfilled")
-            .map((res) => res.value.filepath)
-        )
-      )
-      .returning();
+      .where(eq(attachments.filepath, validatedFields.data.file_path));
 
     return NextResponse.json(
       {
@@ -142,14 +198,16 @@ async function deleteUploadedFileHandler(req: NextRequest) {
 export { deleteUploadedFileHandler as DELETE, uploadFileHandler as POST };
 
 export const DeleteFileRequest = z.object({
-  file_path: z.array(z.string()),
+  file_path: z.string(),
 });
 
 export const UploadFileResponse = z.object({
   uploads: z.array(
     z.object({
-      file_name: z.string(),
-      upload_status: z.string(),
+      filename: z.string(),
+      download: z.string(),
+      filetype: z.string(),
+      filepath: z.string(),
     })
   ),
   uploadedFilesCount: z.number(),

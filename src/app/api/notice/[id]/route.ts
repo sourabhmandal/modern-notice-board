@@ -49,7 +49,7 @@ async function getNoticeByIdHandler(
       attachmentsData.map(async (attachment) => ({
         filename: attachment.filename,
         download: await S3Instance.getDownloadUrl(attachment.filepath),
-        noticeid: attachment.noticeid,
+        filepath: attachment.filepath,
         filetype: attachment.filetype,
       }))
     );
@@ -106,7 +106,7 @@ async function deleteNoticeHandler(
       .from(attachments)
       .where(eq(attachments.noticeid, noticeId));
 
-    await S3Instance.DeleteFileByFilePath(
+    await S3Instance.DeleteFilesByFilePath(
       allAttachmentsOfNotice.map((attachment) => attachment.filepath)
     );
 
@@ -150,7 +150,7 @@ export const GetNoticeResponse = z.object({
       z.object({
         filename: z.string(),
         download: z.string(),
-        noticeid: z.string(),
+        filepath: z.string(),
         filetype: z.string(),
       })
     )

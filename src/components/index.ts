@@ -11,12 +11,12 @@ export { RegisterForm } from "@/components/auth/RegisterForm";
 export {
   CREATE_NOTICE_API,
   DELETE_NOTICE_BY_ID_API,
-  DELETE_UPLOAD_NOTICE_ID_API,
+  DELETE_UPLOAD_API,
   GET_ALL_NOTICE_API,
   GET_NOTICE_BY_ID_API,
   PING_API,
   REGISTER_API,
-  UPLOAD_FILE_BY_NOTICE_ID_API,
+  UPLOAD_FILE_API,
 } from "@/components/constants/backend-routes";
 export { SWRProvider } from "@/components/context/SWRProvider";
 export { SignOutButton } from "./button/SignOutButton";
@@ -47,12 +47,12 @@ export { Toast, type IToastMessage } from "./data-display/Toast";
 export { useToast } from "./data-display/useToast";
 export { NoticeEditor } from "./editor/NoticeEditor";
 export { NoticeEditorMui } from "./editor/NoticeEditorMui";
+export { UploadFilesSection } from "./editor/UploadFilesSection";
 export { AppNavbar } from "./navigation/AppNavbar";
 export { Breadcrumb } from "./navigation/Breadcrumb";
 export { DashboardSideMenu } from "./navigation/DashboardSideMenu";
 export { LandingPageAppBar } from "./navigation/LandingPageAppBar";
 export { DeleteNoticeDialog } from "./popovers/DeleteNoticeDialog";
-export { UploadFilesDialog } from "./popovers/UploadFilesDialog";
 export { ViewNoticeDialog } from "./popovers/ViewNoticeDialog";
 export { LandingPageFAQ } from "./section/LandingPageFAQ";
 export { LandingPageFooter } from "./section/LandingPageFooter";

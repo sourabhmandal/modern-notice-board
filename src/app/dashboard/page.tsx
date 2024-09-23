@@ -1,5 +1,6 @@
 "use client";
 import { DashboardMainContent, NoticeListTable, useToast } from "@/components";
+import { Typography } from "@mui/material";
 import { useSearchParams } from "next/navigation";
 
 export default function DashboardPage() {
@@ -9,7 +10,13 @@ export default function DashboardPage() {
   const rowNos = 10;
 
   return (
-    <DashboardMainContent heading={"Notices"}>
+    <DashboardMainContent
+      heading={
+        <Typography variant="h5" mb={2}>
+          Notices
+        </Typography>
+      }
+    >
       <toast.ToastComponent />
       <NoticeListTable currentPage={pageNos} rowPerPage={rowNos} />
     </DashboardMainContent>

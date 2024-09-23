@@ -1,5 +1,10 @@
 ## Getting Started
 
+Install Dependencies
+```bash
+npm install --force
+```
+
 First, run the development server:
 
 ```bash
@@ -25,5 +30,7 @@ bun dev
 - [X] Add Drizzle
 - [X] Add zod and api type-safety
 - [X] Add OpenAPI
-- [ ] create notice with file upload
-- [ ] view notice with files
+- [X] create notice with file upload
+- [X] view notice with files
+- [ ] RBAC controls for Students and Admin
+- [ ] Edit notice for Admin

@@ -9,6 +9,16 @@ const nextConfig = {
     }
     return config
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'aitplacement-dev.s3.us-east-1.amazonaws.com', // Your S3 bucket's hostname
+        port: '',
+        pathname: '**', // Allow all paths from this domain
+      },
+    ],
+  },
 };
 
 export default nextConfig;

@@ -1,10 +1,13 @@
 import {
-  CopyObjectCommand,
   DeleteObjectCommand,
+  DeleteObjectCommandInput,
   DeleteObjectCommandOutput,
   DeleteObjectsCommand,
   DeleteObjectsCommandInput,
   GetObjectCommand,
+  ListObjectsV2Command,
+  ListObjectsV2CommandInput,
+  ListObjectsV2CommandOutput,
   PutObjectCommand,
   PutObjectCommandOutput,
   S3Client,
@@ -25,14 +28,24 @@ class AwsS3 {
   }
 
   async DeleteFileByFilePath(
-    filePath: Array<string>
+    filePath: string
+  ): Promise<DeleteObjectCommandOutput> {
+    const deleteParams: DeleteObjectCommandInput = {
+      Bucket: process.env.AIT_AWS_BUCKET_ID,
+      Key: filePath,
+    };
+
+    const command = new DeleteObjectCommand(deleteParams);
+    return this.s3_instance.send(command);
+  }
+
+  async DeleteFilesByFilePath(
+    filePaths: Array<string>
   ): Promise<DeleteObjectCommandOutput> {
     const deleteParams: DeleteObjectsCommandInput = {
       Bucket: process.env.AIT_AWS_BUCKET_ID,
       Delete: {
-        Objects: filePath.map((fp) => ({
-          Key: fp,
-        })),
+        Objects: filePaths.map((filePath) => ({ Key: filePath })),
       },
     };
 
@@ -40,43 +53,31 @@ class AwsS3 {
     return this.s3_instance.send(command);
   }
 
-  async UploadFile(file: File): Promise<PutObjectCommandOutput> {
+  async GetFilesByFolder(
+    folderPath: string
+  ): Promise<ListObjectsV2CommandOutput> {
+    const listObjectParams: ListObjectsV2CommandInput = {
+      Bucket: process.env.AIT_AWS_BUCKET_ID,
+      Prefix: folderPath,
+    };
+
+    const command = new ListObjectsV2Command(listObjectParams);
+    return this.s3_instance.send(command);
+  }
+  async UploadFile(
+    noticeId: string,
+    file: File
+  ): Promise<PutObjectCommandOutput> {
     const arrayBuffer = await file.arrayBuffer();
     const uploadParams = {
       Bucket: process.env.AIT_AWS_BUCKET_ID,
-      Key: `temp-uploads/${file.name}`,
+      Key: `${noticeId}/${file.name}`,
       Body: Buffer.from(arrayBuffer),
       ContentType: file.type,
     };
 
     const command = new PutObjectCommand(uploadParams);
     return this.s3_instance.send(command);
-  }
-
-  async moveS3File(sourceKey: string, destinationKey: string) {
-    try {
-      // Step 1: Copy the file to the destination folder
-      const copyParams = {
-        Bucket: process.env.AIT_AWS_BUCKET_ID,
-        CopySource: `${process.env.AIT_AWS_BUCKET_ID}/${sourceKey}`, // Source file
-        Key: destinationKey, // New destination file
-      };
-      const copyCommand = new CopyObjectCommand(copyParams);
-      await this.s3_instance.send(copyCommand);
-
-      // Step 2: Delete the original file
-      const deleteParams = {
-        Bucket: process.env.AIT_AWS_BUCKET_ID,
-        Key: sourceKey, // Source file to delete
-      };
-      const deleteCommand = new DeleteObjectCommand(deleteParams);
-      console.log(
-        `File moved successfully from ${sourceKey} to ${destinationKey}`
-      );
-      return this.s3_instance.send(deleteCommand);
-    } catch (error) {
-      console.error("Error moving file:", error);
-    }
   }
 
   async getDownloadUrl(filepath: string, expiresIn = 3600) {

@@ -1,15 +1,20 @@
 "use client";
 import { DashboardMainContent, NoticeEditorMui } from "@/components";
-import { Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useState } from "react";
-export default function DashboardPage() {
-  const [open, setOpen] = useState(0);
+import { v4 as uuidv4 } from "uuid";
 
+export default function DashboardPage() {
+  const [uuid, setUuid] = useState(uuidv4());
   return (
-    <DashboardMainContent heading={"Create Notice"}>
-      <Typography variant="h5" mb={2}>
-        <NoticeEditorMui open={open} setOpen={setOpen} />
-      </Typography>
+    <DashboardMainContent
+      heading={
+        <Box display="flex" alignItems="center" mb={2} gap={1}>
+          <Typography variant="h5">Create Notice</Typography>
+        </Box>
+      }
+    >
+      <NoticeEditorMui noticeId={uuid} mode={"create"} />
     </DashboardMainContent>
   );
 }

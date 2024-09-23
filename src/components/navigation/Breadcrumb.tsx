@@ -11,7 +11,7 @@ interface BreadcrumbProps {
 }
 export function Breadcrumb({ path }: BreadcrumbProps) {
   // Parse the current path from the router
-  const [pathname, setPathname] = useState<Array<String>>(["/"]);
+  const [pathname, setPathname] = useState<Array<string>>(["/"]);
 
   useEffect(() => {
     if (window) setPathname(path.split("/").filter((x) => x));
@@ -49,10 +49,16 @@ export function Breadcrumb({ path }: BreadcrumbProps) {
         const href = "/" + pathname.slice(0, index + 1).join("/");
 
         // Capitalize and replace hyphens with spaces for display
-        const label = value
-          .replace(/-/g, " ")
-          .replace(/\b\w/g, (char) => char.toUpperCase());
-
+        const uuidRegex =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+        let label: string = "";
+        if (uuidRegex.test(value)) {
+          label = value;
+        } else {
+          label = value
+            .replace(/-/g, " ")
+            .replace(/\b\w/g, (char) => char.toUpperCase());
+        }
         // Determine if the current link is the last in the list
         const isLast = index === pathname.length - 1;
 
