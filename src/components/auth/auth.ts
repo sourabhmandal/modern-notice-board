@@ -18,7 +18,6 @@ export const availableIdps = z.enum([
 ] as [string, ...string[]]);
 export type TAvailableIdps = z.infer<typeof availableIdps>;
 
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // adapter: DrizzleAdapter(db, {
   //   usersTable: users,

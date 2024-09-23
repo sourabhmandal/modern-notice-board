@@ -101,19 +101,16 @@ async function deleteNoticeHandler(
     const db = await initializeDb();
     await db.delete(notices).where(eq(notices.id, noticeId));
 
-    const allAttachmentsOfNotice = await db
-      .select()
-      .from(attachments)
-      .where(eq(attachments.noticeid, noticeId));
-
-    await S3Instance.DeleteFilesByFilePath(
-      allAttachmentsOfNotice.map((attachment) => attachment.filepath)
-    );
-
     const deletedAllAttachmentRef = await db
       .delete(attachments)
       .where(eq(attachments.noticeid, noticeId))
       .returning();
+
+      if (deletedAllAttachmentRef.length > 0) {
+        await S3Instance.DeleteFilesByFilePath(
+          deletedAllAttachmentRef.map((attachment) => attachment.filepath)
+        );
+      }
 
     return NextResponse.json(
       {

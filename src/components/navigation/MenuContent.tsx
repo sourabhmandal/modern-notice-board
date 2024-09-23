@@ -1,7 +1,6 @@
 import { CREATE_NOTICE, DASHBOARD, RESOURCES, USERS_LIST } from "@/components";
 import AnalyticsRoundedIcon from "@mui/icons-material/AnalyticsRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
@@ -29,7 +28,6 @@ const mainListItems = [
 const secondaryListItems = [
   { text: "Settings", icon: <SettingsRoundedIcon />, href: "/settings" },
   { text: "About", icon: <InfoRoundedIcon />, href: "/about" },
-  { text: "Feedback", icon: <HelpRoundedIcon />, href: "/feedback" },
 ];
 
 export default function MenuContent() {
