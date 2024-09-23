@@ -122,47 +122,55 @@ export function ViewNoticeDialog({ id, setOpen }: ViewNoticeDialogProps) {
           <CircularProgress size={80} />
         </Box>
       )}
-      <Grid container gap={2} p={2}>
-        {noticeData?.files &&
-          noticeData.files.map((file, idx) => (
-            <Grid item xs={3.8} key={`file-name-${file.filename}-${idx}`}>
-              <Box
-                border={1}
-                borderColor="divider"
-                display={"flex"}
-                alignItems={"center"}
-                onClick={() => {
-                  window.open(file.download);
-                }}
-                sx={{
-                  cursor: "pointer",
-                  borderRadius: 1,
-                  "&:hover": {
-                    backgroundColor: "rgba(0, 0, 0, 0.04)", // light gray on hover
-                    borderColor: "primary.main",
-                  },
-                }}
-              >
-                <Box padding={2}>
-                  {imageMime.includes(file.filetype) ? (
-                    <ImageIcon />
-                  ) : (
-                    <DescriptionIcon />
-                  )}
+
+      {noticeData?.files && noticeData.files.length > 0 && (
+        <>
+          <Grid container gap={2} p={2}>
+            {noticeData.files.map((file, idx) => (
+              <Grid item xs={3.8} key={`file-name-${file.filename}-${idx}`}>
+                <Box
+                  border={1}
+                  borderColor="divider"
+                  display={"flex"}
+                  alignItems={"center"}
+                  onClick={() => {
+                    window.open(file.download);
+                  }}
+                  sx={{
+                    cursor: "pointer",
+                    borderRadius: 1,
+                    "&:hover": {
+                      backgroundColor: "rgba(0, 0, 0, 0.04)", // light gray on hover
+                      borderColor: "primary.main",
+                    },
+                  }}
+                >
+                  <Box padding={2}>
+                    {imageMime.includes(file.filetype) ? (
+                      <ImageIcon />
+                    ) : (
+                      <DescriptionIcon />
+                    )}
+                  </Box>
+                  <Box>
+                    <Typography variant="body2">{`${
+                      file.filename.length > 40
+                        ? file.filename
+                            .split(".")
+                            .slice(0, -1)
+                            .join()
+                            .substring(0, 40) + "... "
+                        : file.filename.split(".").slice(0, -1).join()
+                    }.${file.filename.split(".").pop()}`}</Typography>
+                    <Typography variant="body2">{file.filetype}</Typography>
+                  </Box>
                 </Box>
-                <Box>
-                  <Typography variant="body2">{`${
-                    file.filename.length > 40
-                      ? file.filename.split(".")[0].substring(0, 40) + "... "
-                      : file.filename.split(".")[0]
-                  }.${file.filename.split(".").pop()}`}</Typography>
-                  <Typography variant="body2">{file.filetype}</Typography>
-                </Box>
-              </Box>
-            </Grid>
-          ))}
-      </Grid>
-      <Divider />
+              </Grid>
+            ))}
+          </Grid>
+          <Divider />
+        </>
+      )}
       <SafeHtml html={noticeData?.contentHtml ?? ""} />
     </Dialog>
   );

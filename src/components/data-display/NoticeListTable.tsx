@@ -141,7 +141,9 @@ export function NoticeListTable({ currentPage, rowPerPage }: IListTable) {
                       edge="end"
                       color="warning"
                       aria-label="update"
-                      onClick={() => setSelectedViewNoticeId(item.id)}
+                      onClick={() =>
+                        router.push(`/dashboard/notice/${item.id}`)
+                      }
                     >
                       <DriveFileRenameOutlineTwoToneIcon />
                     </IconButton>
@@ -207,7 +209,3 @@ export function NoticeListTable({ currentPage, rowPerPage }: IListTable) {
     </Box>
   );
 }
-function updateOptimisticNotice(arg0: any[]): any {
-  throw new Error("Function not implemented.");
-}
-

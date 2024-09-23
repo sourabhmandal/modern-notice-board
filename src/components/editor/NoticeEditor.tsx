@@ -5,19 +5,7 @@ import { CREATE_NOTICE_API } from "@/components";
 import { useToast } from "@/components/data-display/useToast";
 import { NotificationResponse } from "@/components/utils/api.utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import DescriptionIcon from "@mui/icons-material/Description";
-import {
-  Box,
-  Button,
-  CircularProgress,
-  FormControl,
-  FormControlLabel,
-  FormLabel,
-  Radio,
-  RadioGroup,
-  TextField,
-  useTheme,
-} from "@mui/material";
+import { useTheme } from "@mui/material";
 import Bold from "@tiptap/extension-bold";
 import BulletedList from "@tiptap/extension-bullet-list";
 import Document from "@tiptap/extension-document";
@@ -39,15 +27,14 @@ import TextAlign from "@tiptap/extension-text-align";
 import TextStyle from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import { generateHTML } from "@tiptap/html";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { useEditor } from "@tiptap/react";
 import { useSession } from "next-auth/react";
-import { Dispatch, SetStateAction, Suspense, useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import useSWRMutation from "swr/mutation";
 import { z } from "zod";
 import { sendSwrPostRequest } from "../utils/api.utils";
 import styles from "./editor.module.css";
-import { Toolbar } from "./Toolbar";
 
 interface NoticeEditorProps {
   open: number;
@@ -125,50 +112,6 @@ export function NoticeEditor({
     },
   });
 
-  // const PreviewsRemoteFiles = form.values.attachments?.map((file, index) => {
-  //   return (
-  //     <Card
-  //       key={file.fileid}
-  //       sx={{
-  //         border: "1px solid #ccc",
-  //         display: "flex",
-  //         alignItems: "center",
-  //         justifyContent: "space-between",
-  //         padding: 4,
-  //       }}
-  //     >
-  //       <CloudUploadIcon />
-  //       <div style={{ marginLeft: 6 }}>
-  //         <Typography variant="subtitle1">{file.filename}</Typography>
-  //         <Typography color="text.secondary" variant="subtitle1">
-  //           {file.filetype}
-  //         </Typography>
-  //       </div>
-  //       <ActionIcon
-  //         variant="light"
-  //         onClick={() => {
-  //           // remove from aws files
-  //           deleteNoticeByFileId.mutate(
-  //             { noticeId: id, filename: file.filename },
-  //             {
-  //               onSuccess(variables, context) {
-  //                 showNotification({
-  //                   message: `${context.filename} deleted`,
-  //                 });
-  //                 trpcContext.notice.noticeDetail.invalidate();
-  //               },
-  //             }
-  //           );
-  //         }}
-  //       >
-  //         <CloseIcon />
-  //       </ActionIcon>
-  //     </Card>
-  //   );
-  // });
-
-  // create a notice
-
   const {
     data: createNoticeResponse,
     error: createNoticeError,
@@ -219,92 +162,16 @@ export function NoticeEditor({
       contentHtml: editor?.getHTML(),
       adminEmail: session.data?.user.email ?? "",
       isPublished: data.isPublished === "true" ? true : false,
-      files: [],
     });
   };
-
-  if (open >= 0)
-    return (
-      <Suspense fallback={<div>Loading editor...</div>}>
-        <toast.ToastComponent />
-        <form
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-          }}
-          onSubmit={handleSubmit(handleOnSubmit)}
-        >
-          <FormControl fullWidth margin="normal">
-            <TextField
-              type="text"
-              fullWidth
-              placeholder="Notice Title"
-              label="Title"
-              required
-              size="small"
-              {...register("title", { required: true })}
-            />
-          </FormControl>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              height: "40vh",
-            }}
-          >
-            <Toolbar editor={editor} />
-            <EditorContent editor={editor} />
-          </Box>
-
-          <FormControl sx={{ mt: 2 }}>
-            <FormLabel id="demo-row-radio-buttons-group-label">
-              How should we save the notice?
-            </FormLabel>
-            <RadioGroup
-              aria-labelledby="demo-row-radio-buttons-group-label"
-              row={false}
-            >
-              <FormControlLabel
-                value={"false"}
-                defaultChecked
-                checked={getValues("isPublished") === "false"}
-                control={
-                  <Radio {...register("isPublished", { required: true })} />
-                }
-                label="As Drafted"
-              />
-              <FormControlLabel
-                value={"true"}
-                checked={getValues("isPublished") === "true"}
-                control={
-                  <Radio {...register("isPublished", { required: true })} />
-                }
-                label="As Published"
-              />
-            </RadioGroup>
-          </FormControl>
-
-          <Button
-            fullWidth
-            variant="contained"
-            disabled={submitCreateNoticeButtonLoading}
-            startIcon={
-              submitCreateNoticeButtonLoading ? (
-                <CircularProgress size={16} />
-              ) : (
-                <DescriptionIcon />
-              )
-            }
-            size="large"
-            type="submit"
-          >
-            Create Notice
-          </Button>
-        </form>
-      </Suspense>
-    );
 }
+const FileSchema = z.object({
+  download: z.string(),
+  filename: z.string(),
+  filetype: z.string(),
+  filepath: z.string(),
+});
+export type FileData = z.infer<typeof FileSchema>;
 
 export const CreateNoticeSchema = z.object({
   title: z.string().min(1, {

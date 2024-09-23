@@ -1,11 +1,6 @@
 import { TNotificationResponse } from "@/components/utils/api.utils";
 import { initializeDb } from "@/server";
-import {
-  attachments,
-  notices,
-  TInsertAttachmentSchema,
-} from "@/server/model/notice";
-import { S3Instance } from "@/server/S3";
+import { notices } from "@/server/model/notice";
 import { count, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -36,40 +31,25 @@ async function createNoticeHandler(request: Request) {
     const savedNotice = await db
       .insert(notices)
       .values({
+        id: validatedFields.data.id,
         title: validatedFields.data.title,
         isPublished: validatedFields.data.isPublished,
         content: validatedFields.data.content,
         contentHtml: validatedFields.data.contentHtml,
         adminEmail: validatedFields.data.adminEmail,
       })
-      .returning();
-
-    await Promise.all(
-      validatedFields.data.files.map(async (file) => {
-        const source = `temp-uploads/${file}`;
-        const destination = `${
-          savedNotice.length > 0 ? savedNotice[0].id : "temp-uploads"
-        }/${file}`;
-        await S3Instance.moveS3File(source, destination);
-        return db
-          .insert(attachments)
-          .values({
-            noticeid:
-              savedNotice.length > 0 ? savedNotice[0].id : "temp-uploads",
-            filename: file,
-            filepath: source,
-            filetype: file.split(".").pop() ?? "text",
-          } as TInsertAttachmentSchema)
-          .onConflictDoUpdate({
-            target: [attachments.filepath],
-            set: {
-              filepath: destination,
-              noticeid:
-                savedNotice.length > 0 ? savedNotice[0].id : "temp-uploads",
-            } as TInsertAttachmentSchema,
-          });
+      .onConflictDoUpdate({
+        set: {
+          title: validatedFields.data.title,
+          isPublished: validatedFields.data.isPublished,
+          content: validatedFields.data.content,
+          contentHtml: validatedFields.data.contentHtml,
+          adminEmail: validatedFields.data.adminEmail,
+          updatedAt: new Date(),
+        },
+        target: [notices.id],
       })
-    );
+      .returning();
 
     return NextResponse.json(
       {
@@ -160,12 +140,12 @@ async function getAllNoticeHandler(request: Request) {
 }
 
 export const CreateNoticeRequest = z.object({
+  id: z.string().uuid(),
   title: z.string(),
   content: z.string(),
   contentHtml: z.string().optional(),
   isPublished: z.boolean(),
   adminEmail: z.string().email(),
-  files: z.array(z.string()).default([]),
 });
 export type TCreateNoticeRequest = z.infer<typeof CreateNoticeRequest>;
 
