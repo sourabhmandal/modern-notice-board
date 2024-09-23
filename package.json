@@ -85,7 +85,7 @@
     "drizzle-kit": "^0.24.2",
     "eslint": "^9",
     "eslint-config-next": "14.2.13",
-    "jsdom": "^25.0.0",
+    "jsdom": "^25.0.1",
     "typescript": "^5",
     "vite-tsconfig-paths": "^5.0.1",
     "vitest": "^2.0.5"
