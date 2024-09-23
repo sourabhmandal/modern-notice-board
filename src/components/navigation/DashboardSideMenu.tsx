@@ -13,7 +13,6 @@ const drawerWidth = 240;
 
 export function DashboardSideMenu() {
   const session = useSession();
-
   return (
     <Drawer
       variant="permanent"
@@ -36,7 +35,9 @@ export function DashboardSideMenu() {
           p: 1.5,
         }}
       >
-        <Typography variant="h6">Dashboard</Typography>
+        <Typography variant="h6">
+          {session.data?.user.role ?? ""} Dashboard
+        </Typography>
         {/* <ToggleMode border /> */}
       </Box>
       <Divider />
@@ -63,10 +64,22 @@ export function DashboardSideMenu() {
             variant="body2"
             sx={{ fontWeight: 500, lineHeight: "16px" }}
           >
-            {session.data?.user?.name ?? "N.A"}
+            {session.data?.user?.name
+              ? session.data?.user?.name.length > 20
+                ? `${session.data?.user?.name.substring(0, 20)}...`
+                : session.data?.user?.name
+              : "N.A"}
           </Typography>
           <Typography variant="caption" sx={{ color: "text.secondary" }}>
-            {session.data?.user?.email ?? "N.A"}
+            {session.data?.user?.email
+              ? session.data?.user?.email.length > 20
+                ? `${session.data?.user?.email
+                    .split("@")[0]
+                    .substring(0, 8)}...@${
+                    session.data?.user?.email.split("@")[1]
+                  }`
+                : session.data?.user?.email
+              : "N.A"}
           </Typography>
         </Box>
       </Stack>

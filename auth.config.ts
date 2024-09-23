@@ -1,34 +1,15 @@
 import { checkAndRegisterNewUserWithAccount } from "@/app/api/auth/register/route";
 import { TAvailableIdps } from "@/components/auth/auth";
 import { initializeDb } from "@/server";
-import { IUserRoleEnum } from "@/server/model";
 import { users } from "@/server/model/auth";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import {
-  Account,
-  AuthError,
-  NextAuthConfig,
-  Profile,
-  User,
-  type DefaultSession,
-} from "next-auth";
+import { Account, AuthError, NextAuthConfig, Profile, User } from "next-auth";
 import { AdapterUser } from "next-auth/adapters";
 import AzureAd from "next-auth/providers/azure-ad";
 import Credentials, { CredentialInput } from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { object, string, ZodError } from "zod";
-
-declare module "next-auth" {
-  interface Session {
-    user: {
-      role: IUserRoleEnum;
-    } & DefaultSession["user"];
-  }
-  interface User extends DefaultSession {
-    role: IUserRoleEnum;
-  }
-}
 
 export const signInSchema = object({
   email: string({ required_error: "Email is required" })
@@ -118,8 +99,6 @@ export default {
               });
             }
             if (user?.password) {
-              console.log("check user password: ", user?.password);
-
               const passwordMatch = await validatePasswordBcrypt(
                 validatedFields.data.password,
                 user.password
@@ -164,11 +143,13 @@ export default {
       if (user) {
         // User is available during sign-in
         token.id = user.id;
+        token.role = user.role;
       }
       return token;
     },
     session({ session, token }) {
       session.user.id = token.id as string;
+      session.user.role = token.role as string;
       return session;
     },
     signIn: async ({ account, profile }: ISignInParams) => {

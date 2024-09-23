@@ -39,7 +39,7 @@ import styles from "./editor.module.css";
 interface NoticeEditorProps {
   open: number;
   setOpen: Dispatch<SetStateAction<number>>;
-  noticeId?: string;
+  noticeId: string;
   mode?: "create" | "edit";
 }
 
@@ -157,6 +157,7 @@ export function NoticeEditor({
     console.log(generateHTML(editor?.getJSON()!, extensions));
 
     createNoticePostApiCall({
+      id: noticeId,
       title: data.title,
       content: JSON.stringify(editor?.getJSON()),
       contentHtml: editor?.getHTML(),

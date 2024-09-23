@@ -118,6 +118,7 @@ export function NoticeEditorMui({
     "slate" | "loading" | "success"
   >("slate");
 
+
   const methods = useForm<CreateNoticeFormData>({
     resolver: zodResolver(CreateNoticeSchema),
     defaultValues: {
@@ -126,6 +127,7 @@ export function NoticeEditorMui({
       isPublished: isPublished ? "true" : "false",
     },
   });
+  const data = methods.watch();
 
   const {
     data: createNoticeResponse,
@@ -151,6 +153,8 @@ export function NoticeEditorMui({
   );
 
   const handleOnSubmit = async (data: CreateNoticeFormData) => {
+    if (data.title.length < 1) return;
+
     setIsLoadingSync("loading");
     await createNoticePostApiCall({
       id: noticeId,
@@ -163,10 +167,12 @@ export function NoticeEditorMui({
     setIsLoadingSync("success");
   };
 
-  const data = methods.watch();
   useEffect(() => {
+    if (data.title.length < 1) return;
+
     // Define the debounced function
     const debouncedSync = _.debounce(async () => {
+      if (data.title.length < 1) return;
       setIsLoadingSync("loading");
       const response = await handleOnSubmit(data);
       const parsedResponse = NotificationResponse.safeParse(response);
