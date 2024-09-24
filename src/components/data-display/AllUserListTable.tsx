@@ -5,8 +5,16 @@ import {
   TUser,
 } from "@/app/api/user/route";
 import { UserActionsDialog, useToast } from "@/components";
-import { GET_ALL_USER_API } from "@/components/constants/backend-routes";
-import { NotificationResponse } from "@/components/utils/api.utils";
+import {
+  DELETE_USER_BY_ID_API,
+  GET_ALL_USER_API,
+  UPDATE_USER_STATUS_BY_ID_API,
+} from "@/components/constants/backend-routes";
+import {
+  NotificationResponse,
+  sendSwrDeleteRequest,
+  sendSwrPutRequest,
+} from "@/components/utils/api.utils";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import {
@@ -38,14 +46,18 @@ import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useEffect, useState } from "react";
-import useSWR from "swr";
+import useSWR, { KeyedMutator } from "swr";
+import useSWRMutation from "swr/mutation";
 
 export interface IListTable {
   currentPage: number;
   rowPerPage: number;
+  search: string;
+  filter: string;
 }
 
-const filterOptions = ["APPROVED", "REJECTED", "OLD", "NONE"];
+type IUserStatus = "ACTIVE" | "PENDING" | "REJECTED" | "OLD" | "NONE";
+const filterOptions = ["ACTIVE", "PENDING", "REJECTED", "OLD", "NONE"];
 
 interface HeadCell {
   disablePadding: boolean;
@@ -131,15 +143,41 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 
 interface EnhancedTableToolbarProps {
   selectedUsers: Array<TUser>;
-  selectedUserIds: readonly number[];
+  selectedUserIds: readonly string[];
+  currentPage: number;
+  search: string;
+  filter: string;
+  mutateAllUserList: KeyedMutator<any>;
+  isLoading: boolean;
+  optimisticUsers: TGetAllUsersResponse;
+  updateOptimisticUser: React.Dispatch<
+    React.SetStateAction<TGetAllUsersResponse>
+  >;
 }
+
 function EnhancedTableToolbar({
   selectedUsers,
   selectedUserIds,
+  currentPage,
+  search,
+  filter,
+  mutateAllUserList,
+  optimisticUsers,
+  updateOptimisticUser,
 }: EnhancedTableToolbarProps) {
+  const toast = useToast();
+  const router = useRouter();
   const filterAnchorRef = React.useRef<HTMLDivElement>(null);
   const [filterOpen, setFilterOpen] = React.useState(false);
-  const [selectedIndex, setSelectedIndex] = React.useState(3);
+
+  const deleteUserApi = useSWRMutation(
+    DELETE_USER_BY_ID_API(selectedUsers[0]?.id),
+    sendSwrDeleteRequest
+  );
+  const updateUserStatusApi = useSWRMutation(
+    UPDATE_USER_STATUS_BY_ID_API(selectedUsers[0]?.id),
+    sendSwrPutRequest<{ status: string }>
+  );
 
   const handleClose = (event: Event) => {
     if (
@@ -155,8 +193,40 @@ function EnhancedTableToolbar({
     event: React.MouseEvent<HTMLLIElement, MouseEvent>,
     index: number
   ) => {
-    setSelectedIndex(index);
+    // ---------------------- //
+    // Add filter logic here  //
+    router.push(
+      `?page=${currentPage}${
+        search.trim().length > 0 ? `&search=${search}` : ""
+      }&filter=${filterOptions[index]}`
+    );
+    // ---------------------- //
     setFilterOpen(false);
+  };
+
+  const handleUserStatusUpdate = async (status: "ACTIVE" | "REJECTED") => {
+    updateUserStatusApi.trigger({
+      status: status,
+    });
+
+    const newOptimisticUsers = optimisticUsers.users.map((user) => {
+      if (user.id === selectedUserIds[0]) {
+        user.status = status;
+      }
+      return user;
+    });
+    mutateAllUserList(newOptimisticUsers, {
+      optimisticData: newOptimisticUsers,
+      rollbackOnError: true,
+      populateCache: true,
+      revalidate: false,
+    });
+  };
+
+  const handleDeleteUser = async () => {
+    deleteUserApi.trigger();
+
+    mutateAllUserList();
   };
 
   return (
@@ -196,30 +266,63 @@ function EnhancedTableToolbar({
       )}
       {selectedUserIds.length > 0 ? (
         <Tooltip title="Delete">
-          <>
-            <IconButton>
+          <Box display="flex" gap={1}>
+            <IconButton onClick={handleDeleteUser}>
               <DeleteIcon />
             </IconButton>
             {selectedUserIds.length == 1 &&
-              selectedUsers[selectedUserIds[0]].status !== "ACTIVE" && (
-                <Button size="small" variant="contained" color="success">
-                  APPROVE
-                </Button>
+              selectedUsers.find((user) => user.id === selectedUserIds[0])
+                ?.status === "PENDING" && (
+                <>
+                  <Button
+                    size="small"
+                    sx={{ my: "auto" }}
+                    variant="contained"
+                    color="error"
+                    onClick={() => handleUserStatusUpdate("REJECTED")}
+                  >
+                    REJECT
+                  </Button>
+                  <Button
+                    size="small"
+                    sx={{ my: "auto" }}
+                    variant="contained"
+                    color="success"
+                    onClick={() => handleUserStatusUpdate("ACTIVE")}
+                  >
+                    APPROVE
+                  </Button>
+                </>
               )}
+
             {selectedUserIds.length == 1 &&
-              selectedUsers[selectedUserIds[0]].status !== "PENDING" && (
-                <Button size="small" variant="contained" color="warning">
+              selectedUsers.find((user) => user.id === selectedUserIds[0])
+                ?.status === "ACTIVE" && (
+                <Button
+                  size="small"
+                  sx={{ my: "auto" }}
+                  variant="contained"
+                  color="error"
+                  onClick={() => handleUserStatusUpdate("REJECTED")}
+                >
                   REJECT
                 </Button>
               )}
 
             {selectedUserIds.length == 1 &&
-              selectedUsers[selectedUserIds[0]].status !== "PENDING" && (
-                <Button size="small" variant="contained" color="warning">
-                  REJECT
+              selectedUsers.find((user) => user.id === selectedUserIds[0])
+                ?.status === "REJECTED" && (
+                <Button
+                  size="small"
+                  sx={{ my: "auto" }}
+                  variant="contained"
+                  color="success"
+                  onClick={() => handleUserStatusUpdate("ACTIVE")}
+                >
+                  APPROVE
                 </Button>
               )}
-          </>
+          </Box>
         </Tooltip>
       ) : (
         <Tooltip title="Filter list">
@@ -227,10 +330,12 @@ function EnhancedTableToolbar({
             {/* @ts-ignore */}
             <Button
               ref={filterAnchorRef}
-              onClick={() => setFilterOpen((prev) => !prev)}
+              onClick={() => {
+                setFilterOpen((prev) => !prev);
+              }}
               startIcon={<FilterListIcon />}
             >
-              {filterOptions[selectedIndex]}
+              {filter}
             </Button>
             <Popper
               sx={{ zIndex: 1 }}
@@ -255,7 +360,7 @@ function EnhancedTableToolbar({
                         {filterOptions.map((option, index) => (
                           <MenuItem
                             key={option}
-                            selected={index === selectedIndex}
+                            selected={index === filterOptions.indexOf(filter)}
                             onClick={(event) =>
                               handleMenuItemClick(event, index)
                             }
@@ -276,25 +381,27 @@ function EnhancedTableToolbar({
   );
 }
 
-export function AllUserListTable({ currentPage, rowPerPage }: IListTable) {
+export function AllUserListTable({
+  currentPage,
+  rowPerPage,
+  search,
+  filter,
+}: IListTable) {
   const router = useRouter();
   const theme = useTheme();
   const toast = useToast();
   const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
   const [toDeleteNoticeId, setToDeleteNoticeId] = useState<string>("");
-  const [searchInput, setSearchInput] = useState("");
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [searchInput, setSearchInput] = useState(search);
+  const [rowsPerPage, setRowsPerPage] = React.useState(rowPerPage);
   const [page, setPage] = React.useState(0);
-  const [selected, setSelected] = React.useState<readonly number[]>([]);
-  const [filter, setfilter] = useState<
-    "APPROVED" | "REJECTED" | "OLD" | "NONE"
-  >("NONE");
+  const [selected, setSelected] = React.useState<readonly string[]>([]);
 
   const {
     data: userListResponse,
     isLoading: isUserListLoading,
     mutate: mutateAllUserList,
-  } = useSWR(GET_ALL_USER_API(currentPage, searchInput), {
+  } = useSWR(GET_ALL_USER_API(currentPage, search, filter), {
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     refreshInterval: 20000,
@@ -359,7 +466,7 @@ export function AllUserListTable({ currentPage, rowPerPage }: IListTable) {
 
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      const newSelected = optimisticUsers.users.map((n, idx) => idx);
+      const newSelected = optimisticUsers.users.map((n) => n.id);
       setSelected(newSelected);
       return;
     }
@@ -377,9 +484,9 @@ export function AllUserListTable({ currentPage, rowPerPage }: IListTable) {
     setPage(0);
   };
 
-  const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected: readonly number[] = [];
+  const handleClick = (event: React.MouseEvent<unknown>, id: string) => {
+    const selectedIndex = selected.findIndex((user) => user === id);
+    let newSelected: readonly string[] = [];
 
     if (selectedIndex === -1) {
       newSelected = newSelected.concat(selected, id);
@@ -427,6 +534,13 @@ export function AllUserListTable({ currentPage, rowPerPage }: IListTable) {
       <EnhancedTableToolbar
         selectedUserIds={selected}
         selectedUsers={optimisticUsers.users}
+        currentPage={currentPage}
+        search={searchInput}
+        filter={filter}
+        mutateAllUserList={mutateAllUserList}
+        isLoading={isUserListLoading}
+        optimisticUsers={optimisticUsers}
+        updateOptimisticUser={updateOptimisticUser}
       />
       <TableContainer>
         <Table
@@ -441,13 +555,13 @@ export function AllUserListTable({ currentPage, rowPerPage }: IListTable) {
           />
           <TableBody>
             {visibleRows.map((row, index) => {
-              const isItemSelected = selected.includes(index);
+              const isItemSelected = selected.includes(row.id);
               const labelId = `enhanced-table-checkbox-${index}`;
 
               return (
                 <TableRow
                   hover
-                  onClick={(event) => handleClick(event, index)}
+                  onClick={(event) => handleClick(event, row.id)}
                   role="checkbox"
                   aria-checked={isItemSelected}
                   tabIndex={-1}
@@ -472,8 +586,8 @@ export function AllUserListTable({ currentPage, rowPerPage }: IListTable) {
                   >
                     {row.name}
                   </TableCell>
-                  <TableCell>{row.emailVerifiedAt?.toDateString()}</TableCell>
                   <TableCell>{row.email}</TableCell>
+                  <TableCell>{row.emailVerifiedAt?.toDateString()}</TableCell>
                   <TableCell>{row.role}</TableCell>
                   <TableCell>
                     <Chip
@@ -484,7 +598,9 @@ export function AllUserListTable({ currentPage, rowPerPage }: IListTable) {
                           ? "success"
                           : row.status == "PENDING"
                           ? "warning"
-                          : "error"
+                          : row.status == "REJECTED"
+                          ? "error"
+                          : "default"
                       }
                     />
                   </TableCell>

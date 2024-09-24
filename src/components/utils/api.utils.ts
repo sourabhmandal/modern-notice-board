@@ -6,6 +6,12 @@ export async function sendSwrPostRequest<T>(url: string, { arg }: { arg: T }) {
     body: JSON.stringify(arg),
   }).then((res) => res.json());
 }
+export async function sendSwrPutRequest<T>(url: string, { arg }: { arg: T }) {
+  return fetch(url, {
+    method: "PUT",
+    body: JSON.stringify(arg),
+  }).then((res) => res.json());
+}
 
 export async function sendSwrFileUploadRequest(
   url: string,

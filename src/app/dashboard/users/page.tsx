@@ -4,11 +4,11 @@ import { Typography } from "@mui/material";
 import { useSearchParams } from "next/navigation";
 export default function DashboardPage() {
   const searchParams = useSearchParams();
-  const pendingPage = ~~parseInt(searchParams.get("pendingPage") ?? "1");
-  const oldPageNos = ~~parseInt(searchParams.get("pendingPage") ?? "1");
+  const filter = searchParams.get("filter") ?? "NONE";
+  const search = searchParams.get("search") ?? "";
   const pageNos = ~~parseInt(searchParams.get("page") ?? "1");
 
-  const rowNos = 10;
+  const rowNos = 5;
   return (
     <DashboardMainContent
       heading={
@@ -17,7 +17,12 @@ export default function DashboardPage() {
         </Typography>
       }
     >
-      <AllUserListTable currentPage={pageNos} rowPerPage={rowNos} />
+      <AllUserListTable
+        currentPage={pageNos}
+        rowPerPage={rowNos}
+        filter={filter}
+        search={search}
+      />
     </DashboardMainContent>
   );
 }

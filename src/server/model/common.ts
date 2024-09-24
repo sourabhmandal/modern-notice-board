@@ -6,8 +6,8 @@ export type IUserRoleEnum = (typeof userRoleEnum.enumValues)[number];
 
 export const userStatusEnum = pgEnum("userStatus", [
   "ACTIVE",
-  "DISABLED",
   "PENDING",
+  "REJECTED",
 ]);
 export const availableIdps = [
   "credentials",

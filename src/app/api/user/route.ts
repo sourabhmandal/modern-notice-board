@@ -1,19 +1,20 @@
 import { TNotificationResponse } from "@/components/utils/api.utils";
 import { initializeDb } from "@/server";
 import { usersSchema } from "@/server/model";
-import { and, count, eq, SQL, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, SQL, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-type TUserTableName = "activeuser" | "pending" | "olduser";
+type TUserTableName = "active" | "pending" | "rejected" | "old" | "none";
 
-async function getAllNoticeHandler(request: Request) {
+async function getAllUserHandler(request: Request) {
   // page=2&rows=10
   // parse query params using nextjs 14
   const { searchParams } = new URL(request.url);
   const page = ~~(searchParams.get("page") ?? "1");
   const search = searchParams.get("search") ?? "";
-  const filter = searchParams.get("filter")?.toString() ?? "NONE";
+  const filter =
+    (searchParams.get("filter")?.toString() as TUserTableName) ?? "none";
   const rows = 10;
 
   if (page < 1) {
@@ -40,11 +41,18 @@ async function getAllNoticeHandler(request: Request) {
       );
     }
     if (filter.toUpperCase() !== "NONE") {
-      const filterSanitized = filter.toUpperCase() as
-        | "ACTIVE"
-        | "DISABLED"
-        | "PENDING";
-      filterArr.push(eq(usersSchema.status, filterSanitized));
+      let filterSanitized;
+      if (filter.toUpperCase() === "OLD") {
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        filterArr.push(gt(usersSchema.emailVerifiedAt, oneYearAgo));
+      } else {
+        filterSanitized = filter.toUpperCase() as
+          | "ACTIVE"
+          | "PENDING"
+          | "REJECTED";
+        filterArr.push(eq(usersSchema.status, filterSanitized));
+      }
     }
 
     const filterQuery =
@@ -60,6 +68,18 @@ async function getAllNoticeHandler(request: Request) {
       .select({ count: count(usersSchema.id) })
       .from(usersSchema)
       .where(filterQuery);
+
+    if (countResponse[0].count === 0) {
+      return NextResponse.json(
+        {
+          status: "warning",
+          message: "no users found",
+        } as TNotificationResponse,
+        {
+          status: 500,
+        }
+      );
+    }
 
     if (page > Math.ceil(countResponse[0].count / rows)) {
       return NextResponse.json(
@@ -78,7 +98,8 @@ async function getAllNoticeHandler(request: Request) {
       .from(usersSchema)
       .where(filterQuery)
       .offset((page - 1) * rows)
-      .limit(rows);
+      .limit(rows)
+      .orderBy(desc(usersSchema.email));
 
     const usrList = usersResponse.map((usr) => {
       delete (usr as any).password;
@@ -112,7 +133,7 @@ export const User = z.object({
   name: z.string().optional().nullable(),
   email: z.string().email(),
   emailVerifiedAt: z.coerce.date().optional(),
-  status: z.enum(["ACTIVE", "DISABLED", "PENDING"]).default("PENDING"),
+  status: z.enum(["ACTIVE", "PENDING", "REJECTED"]).default("PENDING"),
   image: z.string().optional().nullable(),
   role: z.enum(["ADMIN", "STUDENT"]).default("STUDENT"),
 });
@@ -124,4 +145,4 @@ export const GetAllUsersResponse = z.object({
 });
 export type TGetAllUsersResponse = z.infer<typeof GetAllUsersResponse>;
 
-export { getAllNoticeHandler as GET };
+export { getAllUserHandler as GET };
