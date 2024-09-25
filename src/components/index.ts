@@ -12,10 +12,13 @@ export {
   CREATE_NOTICE_API,
   DELETE_NOTICE_BY_ID_API,
   DELETE_UPLOAD_API,
+  DELETE_USERS_BY_ID_API,
   GET_ALL_NOTICE_API,
+  GET_ALL_USER_API,
   GET_NOTICE_BY_ID_API,
   PING_API,
   REGISTER_API,
+  UPDATE_USER_STATUS_BY_ID_API,
   UPLOAD_FILE_API,
 } from "@/components/constants/backend-routes";
 export { SWRProvider } from "@/components/context/SWRProvider";
@@ -37,6 +40,7 @@ export {
   publicRoutes,
 } from "./constants/frontend-routes";
 export { ThemeModeProvider } from "./context/ThemeModeProvider";
+export { AllUserListTable } from "./data-display/AllUserListTable";
 export { CollapsibleTable } from "./data-display/CollapsibleTable";
 export { DashboardMainContent } from "./data-display/DashboardMainContent";
 export { FeatureChip } from "./data-display/FeatureChip";
@@ -53,6 +57,7 @@ export { Breadcrumb } from "./navigation/Breadcrumb";
 export { DashboardSideMenu } from "./navigation/DashboardSideMenu";
 export { LandingPageAppBar } from "./navigation/LandingPageAppBar";
 export { DeleteNoticeDialog } from "./popovers/DeleteNoticeDialog";
+export { UserActionsDialog } from "./popovers/UserActionsDialog";
 export { ViewNoticeDialog } from "./popovers/ViewNoticeDialog";
 export { LandingPageFAQ } from "./section/LandingPageFAQ";
 export { LandingPageFooter } from "./section/LandingPageFooter";
