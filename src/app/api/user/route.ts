@@ -28,6 +28,7 @@ async function getAllUserHandler(request: Request) {
       }
     );
   }
+
   try {
     const db = await initializeDb();
 
