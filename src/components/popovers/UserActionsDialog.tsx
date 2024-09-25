@@ -1,7 +1,13 @@
 "use client";
-import { TUser } from "@/app/api/user/route";
+import {
+  TDeleteUsersRequest,
+  TGetAllUsersResponse,
+  TUser,
+} from "@/app/api/user/route";
+import { DELETE_USERS_BY_ID_API } from "@/components";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
+  Box,
   Button,
   CircularProgress,
   Dialog,
@@ -13,69 +19,94 @@ import {
   Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { SetStateAction, useEffect } from "react";
+import { SetStateAction } from "react";
+import { KeyedMutator } from "swr";
 import useSWRMutation from "swr/mutation";
-import { DELETE_NOTICE_BY_ID_API } from "../constants/backend-routes";
 import { useToast } from "../data-display/useToast";
 import { NotificationResponse, sendSwrDeleteRequest } from "../utils/api.utils";
 interface UserActionsDialogProps {
-  noticeId: string;
-  setOpen: React.Dispatch<SetStateAction<string>>;
+  selectedUserIds: string[];
+  setSelected: React.Dispatch<SetStateAction<string[]>>;
   currentPage: number;
   userList: Array<TUser>;
-  updateNotices: () => void;
+  optimisticUsers: TGetAllUsersResponse;
+  mutateAllUserList: KeyedMutator<any>;
+  shouldDeleteUserModalOpen: boolean;
+  setShouldDeleteUserModalOpen: React.Dispatch<SetStateAction<boolean>>;
 }
 export function UserActionsDialog({
-  noticeId,
-  setOpen,
+  selectedUserIds,
+  setSelected,
   currentPage,
   userList,
-  updateNotices,
+  optimisticUsers,
+  mutateAllUserList,
+  shouldDeleteUserModalOpen,
+  setShouldDeleteUserModalOpen,
 }: UserActionsDialogProps) {
   const toast = useToast();
   const theme = useTheme();
 
-  const selectedNotice = noticeList.find((notice) => notice.id === noticeId);
+  const deleteUserApi = useSWRMutation(
+    DELETE_USERS_BY_ID_API,
+    sendSwrDeleteRequest<TDeleteUsersRequest>,
+    {
+      onSuccess: (data) => {
+        const parsedResponse = NotificationResponse.safeParse(data);
 
-  const {
-    data: DeleteNoticeResponse,
-    isMutating: isDeleteNoticeLoading,
-    trigger: mutateDeleteNoticeResponse,
-  } = useSWRMutation(DELETE_NOTICE_BY_ID_API(noticeId), sendSwrDeleteRequest);
+        if (parsedResponse.success) {
+          if (parsedResponse?.data?.status === "success") {
+            // setOpen("");
+            return toast.showToast(
+              "Successfully to delete notice",
+              parsedResponse.data.message,
+              parsedResponse.data.status
+            );
+          }
+        }
+      },
+      onError: (error) => {
+        console.log("error in delete notice", error);
 
-  useEffect(() => {
-    if (isDeleteNoticeLoading) return;
+        const parsedErrorResponse = NotificationResponse.safeParse(error);
 
-    const parsedResponse = NotificationResponse.safeParse(DeleteNoticeResponse);
-
-    if (parsedResponse.success) {
-      if (parsedResponse?.data?.status === "success") {
-        setOpen("");
-        return toast.showToast(
-          "Successfully to delete notice",
-          parsedResponse.data.message,
-          parsedResponse.data.status
-        );
-      }
-
-      return toast.showToast(
-        "Failed to delete notice",
-        parsedResponse.data.message,
-        parsedResponse.data.status
-      );
-    } else if (parsedResponse.success === false && !isDeleteNoticeLoading) {
-      toast.showToast(
-        "Failed to delete notices",
-        "server error occured",
-        "error"
-      );
+        if (parsedErrorResponse.success) {
+          return toast.showToast(
+            "Failed to fetch all users",
+            parsedErrorResponse.data.message,
+            parsedErrorResponse.data.status
+          );
+        } else
+          return toast.showToast(
+            "Failed to delete notices",
+            "server error occured",
+            "error"
+          );
+      },
     }
-  }, [DeleteNoticeResponse]);
+  );
+
+  const handleDeleteUser = async () => {
+    deleteUserApi.trigger({
+      userIds: selectedUserIds,
+    });
+    const newOptimisticUsers = optimisticUsers.users.filter(
+      (user) => !selectedUserIds.includes(user.id)
+    );
+    mutateAllUserList(newOptimisticUsers, {
+      optimisticData: newOptimisticUsers,
+      populateCache: true,
+      revalidate: true,
+    });
+  };
 
   return (
     <Dialog
-      open={noticeId !== ""}
-      onClose={() => setOpen("")}
+      open={shouldDeleteUserModalOpen}
+      onClose={() => {
+        setShouldDeleteUserModalOpen(false);
+        setSelected([]);
+      }}
       maxWidth="sm"
       fullWidth
     >
@@ -86,42 +117,53 @@ export function UserActionsDialog({
       <DialogContent>
         <DialogContentText id="alert-dialog-description">
           <Typography variant="body1">
-            You are deleting the following notice
+            You are deleting the following user
           </Typography>
-          <Typography sx={{ fontSize: 12, color: theme.palette.grey[400] }}>
-            {noticeId}
-          </Typography>
-          <Typography
-            variant="body1"
-            sx={{
-              fontWeight: 700,
-              color: theme.palette.error.main,
-              mt: 1,
-            }}
-          >
-            Title: {selectedNotice?.title}
-          </Typography>
-          <Typography variant="body1">
-            Posted By: {selectedNotice?.adminEmail}
-          </Typography>
-          <Typography variant="body1">
-            Published Status:{" "}
-            {selectedNotice?.isPublished ? "Published" : "Not Published"}
-          </Typography>
+          {selectedUserIds.map((id) => {
+            const selectedUser = userList.find((user) => user.id === id);
+            return (
+              <Box>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontWeight: 700,
+                    color: theme.palette.error.main,
+                    mt: 1,
+                  }}
+                >
+                  Email: {selectedUser?.email}
+                </Typography>
+                <Typography variant="body1">
+                  Role: {selectedUser?.role}
+                </Typography>
+                <Typography variant="body1">
+                  Status: {selectedUser?.status}
+                </Typography>
+              </Box>
+            );
+          })}
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => setOpen("")}>Cancel</Button>
+        <Button
+          onClick={() => {
+            setShouldDeleteUserModalOpen(false);
+            setSelected([]);
+          }}
+        >
+          Cancel
+        </Button>
         <Button
           variant="contained"
-          onClick={() => {
+          onClick={async () => {
             console.log("<> OPTIMISTIC UPDATE IN DELETE BUTTON:: ");
-            updateNotices();
-            mutateDeleteNoticeResponse();
+            await handleDeleteUser();
+            setSelected([]);
+            setShouldDeleteUserModalOpen(false);
           }}
           color="error"
           startIcon={
-            isDeleteNoticeLoading ? (
+            deleteUserApi.isMutating ? (
               <CircularProgress size={20} />
             ) : (
               <DeleteIcon />

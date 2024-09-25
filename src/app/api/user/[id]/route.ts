@@ -75,50 +75,5 @@ async function updateUserStatusHandler(
   }
 }
 
-async function deleteUserHandler(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { id: userId } = params;
-    if (userId === "undefined" || userId === "null") {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "Invalid notice id",
-        } as TNotificationResponse,
-        {
-          status: 400,
-        }
-      );
-    }
-    const db = await initializeDb();
-    const deletedUser = await db
-      .delete(users)
-      .where(eq(users.id, userId))
-      .returning();
 
-    return NextResponse.json(
-      {
-        status: "success",
-        message: `user (${deletedUser[0].email}) deleted successfully`,
-      } as TNotificationResponse,
-      {
-        status: 200,
-      }
-    );
-  } catch (err) {
-    console.log(err);
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "notice created unsuccessful due to server error",
-      } as TNotificationResponse,
-      {
-        status: 500,
-      }
-    );
-  }
-}
-
-export { deleteUserHandler as DELETE, updateUserStatusHandler as PUT };
+export { updateUserStatusHandler as PUT };

@@ -12,11 +12,13 @@ export {
   CREATE_NOTICE_API,
   DELETE_NOTICE_BY_ID_API,
   DELETE_UPLOAD_API,
+  DELETE_USERS_BY_ID_API,
   GET_ALL_NOTICE_API,
   GET_ALL_USER_API,
   GET_NOTICE_BY_ID_API,
   PING_API,
   REGISTER_API,
+  UPDATE_USER_STATUS_BY_ID_API,
   UPLOAD_FILE_API,
 } from "@/components/constants/backend-routes";
 export { SWRProvider } from "@/components/context/SWRProvider";
@@ -65,3 +67,4 @@ export { LandingPagePricing } from "./section/LandingPagePricing";
 export { LandingPageTestimonials } from "./section/LandingPageTestimonials";
 export { LandinPageFeatures } from "./section/LandinPageFeatures";
 export { LandinPageHero } from "./section/LandinPageHero";
+

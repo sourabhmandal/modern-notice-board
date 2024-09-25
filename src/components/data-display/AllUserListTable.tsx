@@ -6,13 +6,11 @@ import {
 } from "@/app/api/user/route";
 import { UserActionsDialog, useToast } from "@/components";
 import {
-  DELETE_USER_BY_ID_API,
   GET_ALL_USER_API,
   UPDATE_USER_STATUS_BY_ID_API,
 } from "@/components/constants/backend-routes";
 import {
   NotificationResponse,
-  sendSwrDeleteRequest,
   sendSwrPutRequest,
 } from "@/components/utils/api.utils";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -57,7 +55,7 @@ export interface IListTable {
 }
 
 type IUserStatus = "ACTIVE" | "PENDING" | "REJECTED" | "OLD" | "NONE";
-const filterOptions = ["ACTIVE", "PENDING", "REJECTED", "OLD", "NONE"];
+const filterOptions = ["ACTIVE", "PENDING", "REJECTED", "NONE"];
 
 interface HeadCell {
   disablePadding: boolean;
@@ -142,40 +140,38 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 }
 
 interface EnhancedTableToolbarProps {
-  selectedUsers: Array<TUser>;
-  selectedUserIds: readonly string[];
+  allUsers: Array<TUser>;
+  selectedUserIds: string[];
   currentPage: number;
   search: string;
   filter: string;
   mutateAllUserList: KeyedMutator<any>;
   isLoading: boolean;
   optimisticUsers: TGetAllUsersResponse;
-  updateOptimisticUser: React.Dispatch<
-    React.SetStateAction<TGetAllUsersResponse>
-  >;
+  setShouldDeleteUserModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 function EnhancedTableToolbar({
-  selectedUsers,
+  allUsers,
   selectedUserIds,
   currentPage,
   search,
   filter,
   mutateAllUserList,
   optimisticUsers,
-  updateOptimisticUser,
+  setShouldDeleteUserModalOpen,
 }: EnhancedTableToolbarProps) {
   const toast = useToast();
   const router = useRouter();
   const filterAnchorRef = React.useRef<HTMLDivElement>(null);
   const [filterOpen, setFilterOpen] = React.useState(false);
 
-  const deleteUserApi = useSWRMutation(
-    DELETE_USER_BY_ID_API(selectedUsers[0]?.id),
-    sendSwrDeleteRequest
+  const firstSelectedUser = allUsers.find(
+    (usr: TUser) => usr.id === selectedUserIds[0]
   );
+
   const updateUserStatusApi = useSWRMutation(
-    UPDATE_USER_STATUS_BY_ID_API(selectedUsers[0]?.id),
+    UPDATE_USER_STATUS_BY_ID_API(firstSelectedUser?.id ?? ""),
     sendSwrPutRequest<{ status: string }>
   );
 
@@ -194,14 +190,13 @@ function EnhancedTableToolbar({
     index: number
   ) => {
     // ---------------------- //
+    setFilterOpen(false);
     // Add filter logic here  //
     router.push(
       `?page=${currentPage}${
         search.trim().length > 0 ? `&search=${search}` : ""
       }&filter=${filterOptions[index]}`
     );
-    // ---------------------- //
-    setFilterOpen(false);
   };
 
   const handleUserStatusUpdate = async (status: "ACTIVE" | "REJECTED") => {
@@ -217,16 +212,9 @@ function EnhancedTableToolbar({
     });
     mutateAllUserList(newOptimisticUsers, {
       optimisticData: newOptimisticUsers,
-      rollbackOnError: true,
       populateCache: true,
-      revalidate: false,
+      revalidate: true,
     });
-  };
-
-  const handleDeleteUser = async () => {
-    deleteUserApi.trigger();
-
-    mutateAllUserList();
   };
 
   return (
@@ -267,12 +255,11 @@ function EnhancedTableToolbar({
       {selectedUserIds.length > 0 ? (
         <Tooltip title="Delete">
           <Box display="flex" gap={1}>
-            <IconButton onClick={handleDeleteUser}>
+            <IconButton onClick={() => setShouldDeleteUserModalOpen(true)}>
               <DeleteIcon />
             </IconButton>
             {selectedUserIds.length == 1 &&
-              selectedUsers.find((user) => user.id === selectedUserIds[0])
-                ?.status === "PENDING" && (
+              firstSelectedUser?.status === "PENDING" && (
                 <>
                   <Button
                     size="small"
@@ -296,8 +283,7 @@ function EnhancedTableToolbar({
               )}
 
             {selectedUserIds.length == 1 &&
-              selectedUsers.find((user) => user.id === selectedUserIds[0])
-                ?.status === "ACTIVE" && (
+              firstSelectedUser?.status === "ACTIVE" && (
                 <Button
                   size="small"
                   sx={{ my: "auto" }}
@@ -310,8 +296,7 @@ function EnhancedTableToolbar({
               )}
 
             {selectedUserIds.length == 1 &&
-              selectedUsers.find((user) => user.id === selectedUserIds[0])
-                ?.status === "REJECTED" && (
+              firstSelectedUser?.status === "REJECTED" && (
                 <Button
                   size="small"
                   sx={{ my: "auto" }}
@@ -391,11 +376,13 @@ export function AllUserListTable({
   const theme = useTheme();
   const toast = useToast();
   const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
-  const [toDeleteNoticeId, setToDeleteNoticeId] = useState<string>("");
   const [searchInput, setSearchInput] = useState(search);
   const [rowsPerPage, setRowsPerPage] = React.useState(rowPerPage);
-  const [page, setPage] = React.useState(0);
-  const [selected, setSelected] = React.useState<readonly string[]>([]);
+  const [page, setPage] = React.useState(currentPage);
+  const [selected, setSelected] = React.useState<string[]>([]);
+  const [emptyRows, setEmptyRows] = useState(0);
+  const [shouldDeleteUserModalOpen, setShouldDeleteUserModalOpen] =
+    useState(false);
 
   const {
     data: userListResponse,
@@ -405,13 +392,50 @@ export function AllUserListTable({
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     refreshInterval: 20000,
+    onSuccess(data, key, config) {
+      const parsedResponse = GetAllUsersResponse.safeParse(data);
+      if (parsedResponse.success) {
+        updateOptimisticUser({
+          users: parsedResponse.data.users,
+          totalCount: parsedResponse.data.totalCount,
+        });
+      } else if (parsedResponse.success === false && !isUserListLoading) {
+        const parsedErrorResponse = NotificationResponse.safeParse(data);
+
+        if (parsedErrorResponse.success) {
+          updateOptimisticUser({
+            users: [],
+            totalCount: 0,
+          });
+          return toast.showToast(
+            "No user found",
+            parsedErrorResponse.data.message,
+            parsedErrorResponse.data.status
+          );
+        } else
+          return toast.showToast(
+            "Failed to fetch all users",
+            "server error occured",
+            "error"
+          );
+      }
+    },
     onError(error, key, config) {
       console.error("get all users error :: ", error);
-      toast.showToast(
-        "Failed to fetch all users",
-        "server error occured",
-        "error"
-      );
+      const parsedErrorResponse = NotificationResponse.safeParse(error);
+
+      if (parsedErrorResponse.success) {
+        return toast.showToast(
+          "Failed to fetch all users",
+          parsedErrorResponse.data.message,
+          parsedErrorResponse.data.status
+        );
+      } else
+        toast.showToast(
+          "Failed to fetch all users",
+          "server error occured",
+          "error"
+        );
     },
   });
 
@@ -421,36 +445,11 @@ export function AllUserListTable({
       totalCount: 0,
     });
 
-  useEffect(() => {
-    const parsedErrorResponse =
-      NotificationResponse.safeParse(userListResponse);
-
-    if (parsedErrorResponse.success) {
-      return toast.showToast(
-        "Failed to fetch all users",
-        parsedErrorResponse.data.message,
-        parsedErrorResponse.data.status
-      );
-    }
-    const parsedResponse = GetAllUsersResponse.safeParse(userListResponse);
-
-    if (parsedResponse.success) {
-      updateOptimisticUser({
-        users: parsedResponse.data.users,
-        totalCount: parsedResponse.data.totalCount,
-      });
-    } else if (parsedResponse.success === false && !isUserListLoading) {
-      toast.showToast(
-        "Failed to fetch all users",
-        "server error occured",
-        "error"
-      );
-    }
-  }, [userListResponse]);
+  useEffect(() => {}, [userListResponse]);
 
   const handleUserOptimisticUpdate = async () => {
     const optimisticData = optimisticUsers.users.filter(
-      (d) => d.id !== toDeleteNoticeId
+      (d) => !selected.includes(d.id)
     );
     await mutateAllUserList(
       updateOptimisticUser((prev) => ({ ...prev, users: [...optimisticData] })),
@@ -461,7 +460,7 @@ export function AllUserListTable({
         revalidate: false,
       }
     );
-    setToDeleteNoticeId("");
+    setSelected([]);
   };
 
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -480,13 +479,13 @@ export function AllUserListTable({
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    setRowsPerPage(~~parseInt(event.target.value, 10));
+    setPage(1);
   };
 
   const handleClick = (event: React.MouseEvent<unknown>, id: string) => {
     const selectedIndex = selected.findIndex((user) => user === id);
-    let newSelected: readonly string[] = [];
+    let newSelected: string[] = [];
 
     if (selectedIndex === -1) {
       newSelected = newSelected.concat(selected, id);
@@ -504,43 +503,41 @@ export function AllUserListTable({
   };
 
   // Avoid a layout jump when reaching the last page with empty rows.
-  const emptyRows =
-    page > 0
-      ? Math.max(0, (1 + page) * rowsPerPage - optimisticUsers.users.length)
-      : 0;
 
-  const visibleRows = React.useMemo(
-    () =>
-      [...optimisticUsers.users].slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage
-      ),
-    [page, rowsPerPage, optimisticUsers.users]
-  );
+  useEffect(() => {
+    const emptyRows =
+      page > 0
+        ? Math.max(0, page * rowsPerPage - optimisticUsers.users.length)
+        : 0;
+    setEmptyRows(emptyRows);
+  }, [rowsPerPage, optimisticUsers.users.length]);
 
   return (
     <Box width={"100%"} border={1} borderRadius={2} borderColor="divider">
       <toast.ToastComponent />
-      {toDeleteNoticeId && (
+      {shouldDeleteUserModalOpen && (
         <UserActionsDialog
-          noticeId={toDeleteNoticeId}
-          setOpen={setToDeleteNoticeId}
+          selectedUserIds={selected}
+          setSelected={setSelected}
           currentPage={currentPage}
           userList={optimisticUsers.users ?? []}
-          updateNotices={handleUserOptimisticUpdate}
+          optimisticUsers={optimisticUsers}
+          mutateAllUserList={mutateAllUserList}
+          shouldDeleteUserModalOpen={shouldDeleteUserModalOpen}
+          setShouldDeleteUserModalOpen={setShouldDeleteUserModalOpen}
         />
       )}
 
       <EnhancedTableToolbar
         selectedUserIds={selected}
-        selectedUsers={optimisticUsers.users}
+        allUsers={optimisticUsers.users}
         currentPage={currentPage}
         search={searchInput}
         filter={filter}
         mutateAllUserList={mutateAllUserList}
         isLoading={isUserListLoading}
         optimisticUsers={optimisticUsers}
-        updateOptimisticUser={updateOptimisticUser}
+        setShouldDeleteUserModalOpen={setShouldDeleteUserModalOpen}
       />
       <TableContainer>
         <Table
@@ -554,10 +551,9 @@ export function AllUserListTable({
             rowCount={optimisticUsers.users.length}
           />
           <TableBody>
-            {visibleRows.map((row, index) => {
+            {optimisticUsers.users.map((row, index) => {
               const isItemSelected = selected.includes(row.id);
               const labelId = `enhanced-table-checkbox-${index}`;
-
               return (
                 <TableRow
                   hover
@@ -610,7 +606,7 @@ export function AllUserListTable({
             {emptyRows > 0 && (
               <TableRow
                 style={{
-                  height: 100 * emptyRows,
+                  height: 57 * emptyRows,
                 }}
               >
                 <TableCell colSpan={6} />

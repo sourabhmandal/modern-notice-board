@@ -1,7 +1,8 @@
 import { TNotificationResponse } from "@/components/utils/api.utils";
 import { initializeDb } from "@/server";
 import { usersSchema } from "@/server/model";
-import { and, count, desc, eq, gt, SQL, sql } from "drizzle-orm";
+import { users } from "@/server/model/auth";
+import { and, count, desc, eq, gt, inArray, SQL, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -74,7 +75,7 @@ async function getAllUserHandler(request: Request) {
       return NextResponse.json(
         {
           status: "warning",
-          message: "no users found",
+          message: "no users match the search criteria",
         } as TNotificationResponse,
         {
           status: 500,
@@ -82,7 +83,10 @@ async function getAllUserHandler(request: Request) {
       );
     }
 
-    if (page > Math.ceil(countResponse[0].count / rows)) {
+    if (
+      countResponse[0].count !== 0 &&
+      page > Math.ceil(countResponse[0].count / rows)
+    ) {
       return NextResponse.json(
         {
           status: "error",
@@ -129,6 +133,57 @@ async function getAllUserHandler(request: Request) {
     );
   }
 }
+
+async function deleteUserHandler(req: Request) {
+  try {
+    const reqData = await req.json();
+
+    const parsedData = DeleteUsersRequest.safeParse(reqData);
+    if (!parsedData.success) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "Invalid request data",
+        } as TNotificationResponse,
+        {
+          status: 400,
+        }
+      );
+    }
+    const { userIds } = parsedData.data;
+    if (userIds.length !== 0) {
+      const db = await initializeDb();
+      const deletedUser = await db
+        .delete(users)
+        .where(inArray(users.id, userIds))
+        .returning();
+
+      console.log(`${deletedUser.length} users deleted`);
+    }
+
+    return NextResponse.json(
+      {
+        status: "success",
+        message: `users deleted successfully`,
+      } as TNotificationResponse,
+      {
+        status: 200,
+      }
+    );
+  } catch (err) {
+    console.log(err);
+    return NextResponse.json(
+      {
+        status: "error",
+        message: "notice created unsuccessful due to server error",
+      } as TNotificationResponse,
+      {
+        status: 500,
+      }
+    );
+  }
+}
+
 export const User = z.object({
   id: z.string().uuid(),
   name: z.string().optional().nullable(),
@@ -146,4 +201,10 @@ export const GetAllUsersResponse = z.object({
 });
 export type TGetAllUsersResponse = z.infer<typeof GetAllUsersResponse>;
 
-export { getAllUserHandler as GET };
+export const DeleteUsersRequest = z.object({
+  userIds: z.array(z.string().uuid()),
+});
+export type TDeleteUsersRequest = z.infer<typeof DeleteUsersRequest>;
+
+export { deleteUserHandler as DELETE, getAllUserHandler as GET };
+
