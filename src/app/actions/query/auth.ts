@@ -5,7 +5,7 @@ import { env } from "@/server/env";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 
-type ITppProviders = "google" | "facebook" | "github" | "azure-ad" | string;
+type ITppProviders = "google" | "azure-ad" | string;
 
 export async function startLoginWithTpp(provider: ITppProviders) {
   await signIn(provider, {

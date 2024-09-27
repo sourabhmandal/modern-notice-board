@@ -25,7 +25,10 @@ import useSWRMutation from "swr/mutation";
 import { z } from "zod";
 import { AuthFormWrapper } from "./AuthFormWrapper";
 
-import { TRegisterRequest } from "@/app/api/auth/register/route";
+import {
+  registerResponse,
+  TRegisterRequest,
+} from "@/app/api/auth/register/route";
 import { useEffect, useState } from "react";
 import { sendSwrPostRequest } from "../utils/api.utils";
 import { commonPasswords } from "./commonPasswords";
@@ -46,7 +49,24 @@ export function RegisterForm() {
     error: registerFormError,
     isMutating: submitCredentialsButtonLoading,
     trigger: registerFormPostApiCall,
-  } = useSWRMutation(REGISTER_API, sendSwrPostRequest<TRegisterRequest>);
+  } = useSWRMutation(REGISTER_API, sendSwrPostRequest<TRegisterRequest>, {
+    onSuccess(data, key, config) {
+      const response = registerResponse.safeParse(data);
+      if (response.success) {
+        toaster.showToast(response.data.message, null, response.data.status);
+      }
+    },
+    onError(err, key, config) {
+      const response = registerResponse.safeParse(err);
+      if (response.success) {
+        toaster.showToast(
+          "unable to register user",
+          response.data.message,
+          response.data.status
+        );
+      }
+    },
+  });
 
   const onSubmit = async (data: RegisterFormData) => {
     registerFormPostApiCall({
@@ -80,20 +100,15 @@ export function RegisterForm() {
         backButtonLink={AUTH_LOGIN}
         showSocial
       >
-        {registerFormResponse &&
-          (parseInt(registerFormResponse.status) < 400 ? (
-            <Alert icon={<CheckIcon fontSize="inherit" />} severity="success">
-              {registerFormResponse.message}
-            </Alert>
-          ) : (
-            <Alert
-              icon={<CloseIcon fontSize="inherit" />}
-              sx={{ width: "100%" }}
-              severity="error"
-            >
-              {registerFormResponse.message}
-            </Alert>
-          ))}
+        {registerFormResponse && (
+          <Alert
+            icon={<CheckIcon fontSize="inherit" />}
+            severity={registerFormResponse.status}
+            sx={{ width: "100%", textAlign: "left" }}
+          >
+            {registerFormResponse.message}
+          </Alert>
+        )}
 
         {errors.root && (
           <Alert icon={<CloseIcon fontSize="inherit" />} severity="error">

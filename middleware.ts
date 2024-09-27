@@ -5,6 +5,7 @@ import {
   DASHBOARD,
   publicRoutes,
 } from "@/components";
+import { ADMIN_DASHBOARD } from "@/components/constants/frontend-routes";
 import NextAuth from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import authConfig from "./auth.config";
@@ -15,15 +16,25 @@ export default auth(async function middleware(req: NextRequest) {
   const { nextUrl } = req;
   console.log("isLoggedIn: ", isLoggedIn, " Path: ", req.nextUrl.pathname);
 
+  const isAdminRoute = nextUrl.pathname.startsWith("/admin");
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
-  if (isAuthRoute) {
-    if (isLoggedIn) {
-      return NextResponse.redirect(new URL(DASHBOARD, `${nextUrl.basePath}/`));
-    }
-    return;
+  // if (isAdminRoute && !isLoggedIn) {
+  //   console.log(
+  //     `${nextUrl.basePath}/${AUTH_LOGIN}?callbackUrl=${nextUrl.basePath}${nextUrl.pathname}`
+  //   );
+  //   return NextResponse.redirect(
+  //     `${nextUrl.basePath}/${AUTH_LOGIN}?callbackUrl=${nextUrl.basePath}${nextUrl.pathname}`
+  //   );
+  // }
+
+  if (isAuthRoute && isLoggedIn) {
+    //@ts-ignore
+    req.auth.user.role === "ADMIN"
+      ? NextResponse.redirect(new URL(ADMIN_DASHBOARD, `${nextUrl.basePath}/`))
+      : NextResponse.redirect(new URL(DASHBOARD, `${nextUrl.basePath}/`));
   }
 
   if (!isLoggedIn && !isPublicRoute) {
