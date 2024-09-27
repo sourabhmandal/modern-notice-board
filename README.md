@@ -1,3 +1,5 @@
+## System Architechture
+![System Architechture](https://raw.githubusercontent.com/sourabhmandal/modern-notice-board/337dcc207f64b855eccdd16d4957e6da6fff1e0a/readme-resources/architechture.svg)
 ## Getting Started
 
 Install Dependencies
