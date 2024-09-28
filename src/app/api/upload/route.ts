@@ -1,5 +1,5 @@
 import { TNotificationResponse } from "@/components/utils/api.utils";
-import { initializeDb } from "@/server";
+import db from "@/server";
 import { attachments, TInsertAttachmentSchema } from "@/server/model/notice";
 import { S3Instance } from "@/server/S3";
 import { eq } from "drizzle-orm";
@@ -12,7 +12,6 @@ async function uploadFileHandler(req: NextRequest) {
 
     let files = formData.getAll("file") as Array<File>; // Access the file
     const noticeId = formData.get("noticeId") as string; // Access the noticeId
-    const db = await initializeDb();
 
     if (!noticeId)
       return NextResponse.json(
@@ -157,8 +156,6 @@ async function deleteUploadedFileHandler(req: NextRequest) {
         }
       );
     }
-
-    const db = await initializeDb();
 
     const deleteS3Response = await S3Instance.DeleteFileByFilePath(
       validatedFields.data.file_path

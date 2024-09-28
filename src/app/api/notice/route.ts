@@ -1,5 +1,5 @@
 import { TNotificationResponse } from "@/components/utils/api.utils";
-import { initializeDb } from "@/server";
+import db from "@/server";
 import { notices } from "@/server/model/notice";
 import { count, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -27,7 +27,7 @@ async function createNoticeHandler(request: Request) {
     }
 
     // create notice in db
-    const db = await initializeDb();
+
     const savedNotice = await db
       .insert(notices)
       .values({
@@ -93,7 +93,6 @@ async function getAllNoticeHandler(request: Request) {
     );
   }
   try {
-    const db = await initializeDb();
     const countData = await db
       .select({ count: count(notices.id) })
       .from(notices);

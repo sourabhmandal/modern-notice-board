@@ -1,5 +1,5 @@
 import { TNotificationResponse } from "@/components/utils/api.utils";
-import { initializeDb } from "@/server";
+import db from "@/server";
 import { usersSchema } from "@/server/model";
 import { users } from "@/server/model/auth";
 import { and, count, desc, eq, gt, inArray, SQL, sql } from "drizzle-orm";
@@ -31,8 +31,6 @@ async function getAllUserHandler(request: Request) {
   }
 
   try {
-    const db = await initializeDb();
-
     // filters
     let filterArr = [];
     if (search.toString().length > 0) {
@@ -152,7 +150,6 @@ async function deleteUserHandler(req: Request) {
     }
     const { userIds } = parsedData.data;
     if (userIds.length !== 0) {
-      const db = await initializeDb();
       const deletedUser = await db
         .delete(users)
         .where(inArray(users.id, userIds))
@@ -207,4 +204,3 @@ export const DeleteUsersRequest = z.object({
 export type TDeleteUsersRequest = z.infer<typeof DeleteUsersRequest>;
 
 export { deleteUserHandler as DELETE, getAllUserHandler as GET };
-

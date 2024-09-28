@@ -1,6 +1,6 @@
 import { checkAndRegisterNewUserWithAccount } from "@/app/api/auth/register/route";
 import { TAvailableIdps } from "@/components/auth/auth";
-import { initializeDb } from "@/server";
+import db from "@/server";
 import { users } from "@/server/model/auth";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
@@ -54,7 +54,6 @@ export default {
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
       profile: async (profile: Profile): Promise<User> => {
-        const db = await initializeDb();
         let user = await db.query.users.findFirst({
           where: eq(users.email, profile?.email ?? ""),
         });
@@ -66,7 +65,6 @@ export default {
       clientSecret: process.env.AUTH_AZURE_AD_SECRET,
       tenantId: process.env.AUTH_AZURE_AD_TENANT_ID,
       profile: async (profile: Profile): Promise<User> => {
-        const db = await initializeDb();
         let user = await db.query.users.findFirst({
           where: eq(users.email, profile?.email ?? ""),
         });
@@ -87,8 +85,6 @@ export default {
           );
           if (validatedFields.success) {
             // logic to verify if the user exists
-            const db = await initializeDb();
-
             let user = await db.query.users.findFirst({
               where: eq(users.email, validatedFields.data.email),
             });
@@ -127,7 +123,7 @@ export default {
           }
         } catch (error) {
           if (error instanceof ZodError) {
-            console.error("ZodError:", error.errors);
+            console.error("ZodError:", error);
             // Return `null` to indicate that the credentials are invalid
             return null;
           } else {

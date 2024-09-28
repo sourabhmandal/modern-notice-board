@@ -1,11 +1,10 @@
-import { initializeDb } from "@/server";
+import db from "@/server";
 import { accounts, users } from "@/server/model/auth";
 import { availableIdps } from "@/server/model/common";
 import bcrypt from "bcryptjs";
 import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-
 
 export const RegisterRequest = z.object({
   fullName: z.string().nullable(),
@@ -80,7 +79,6 @@ export async function checkAndRegisterNewUserWithAccount(
   data: TRegisterRequest
 ): Promise<TRegisterResponse> {
   try {
-    const db = await initializeDb();
     let user = await db.query.users.findFirst({
       where: eq(users.email, data.email),
     });
