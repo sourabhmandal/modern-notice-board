@@ -1,7 +1,14 @@
 "use client";
-import { DashboardMainContent } from "@/components";
+import { AllUserListTable, DashboardMainContent } from "@/components";
 import { Typography } from "@mui/material";
+import { useSearchParams } from "next/navigation";
 export default function DashboardPage() {
+  const searchParams = useSearchParams();
+  const filter = searchParams.get("filter") ?? "NONE";
+  const search = searchParams.get("search") ?? "";
+  const pageNos = ~~parseInt(searchParams.get("page") ?? "1");
+
+  const rowNos = 5;
   return (
     <DashboardMainContent
       heading={
@@ -10,9 +17,12 @@ export default function DashboardPage() {
         </Typography>
       }
     >
-      <Typography variant="h5" mb={2}>
-        USERS
-      </Typography>
+      <AllUserListTable
+        currentPage={pageNos}
+        rowPerPage={rowNos}
+        filter={filter}
+        search={search}
+      />
     </DashboardMainContent>
   );
 }
