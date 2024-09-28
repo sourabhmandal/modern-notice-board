@@ -1,5 +1,5 @@
 "use client";
-import { AUTH_LOGIN } from "@/components";
+import { AUTH_LOGIN } from "@/components/constants/frontend-routes";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useTheme } from "@mui/material";
 import AppBar from "@mui/material/AppBar";

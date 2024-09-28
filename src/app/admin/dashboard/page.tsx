@@ -1,6 +1,7 @@
 "use client";
 import { DashboardMainContent, NoticeListTable, useToast } from "@/components";
 import { Typography } from "@mui/material";
+import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 
 export default function DashboardPage() {
@@ -8,6 +9,7 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const pageNos = ~~parseInt(searchParams.get("page") ?? "1");
   const rowNos = 10;
+  const session = useSession();
 
   return (
     <DashboardMainContent
@@ -18,7 +20,7 @@ export default function DashboardPage() {
       }
     >
       <toast.ToastComponent />
-      <NoticeListTable currentPage={pageNos} rowPerPage={rowNos} />
+      <NoticeListTable currentPage={pageNos} rowPerPage={rowNos} isAdmin />
     </DashboardMainContent>
   );
 }

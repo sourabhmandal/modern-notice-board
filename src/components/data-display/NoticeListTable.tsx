@@ -27,9 +27,14 @@ import useSWR from "swr";
 export interface IListTable {
   currentPage: number;
   rowPerPage: number;
+  isAdmin?: boolean;
 }
 
-export function NoticeListTable({ currentPage, rowPerPage }: IListTable) {
+export function NoticeListTable({
+  currentPage,
+  rowPerPage,
+  isAdmin,
+}: IListTable) {
   const router = useRouter();
   const theme = useTheme();
   const toast = useToast();
@@ -131,31 +136,35 @@ export function NoticeListTable({ currentPage, rowPerPage }: IListTable) {
               <ListItem
                 sx={{ padding: 0 }}
                 secondaryAction={
-                  <Box
-                    gap={2}
-                    display="flex"
-                    justifyContent="center"
-                    alignItems="center"
-                  >
-                    <IconButton
-                      edge="end"
-                      color="warning"
-                      aria-label="update"
-                      onClick={() =>
-                        router.push(`/dashboard/notice/${item.id}`)
-                      }
-                    >
-                      <DriveFileRenameOutlineTwoToneIcon />
-                    </IconButton>
-                    <IconButton
-                      edge="end"
-                      color="error"
-                      aria-label="delete"
-                      onClick={() => setToDeleteNoticeId(item.id)}
-                    >
-                      <DeleteOutlineTwoToneIcon />
-                    </IconButton>
-                  </Box>
+                  isAdmin && (
+                    <React.Fragment>
+                      <Box
+                        gap={2}
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                      >
+                        <IconButton
+                          edge="end"
+                          color="warning"
+                          aria-label="update"
+                          onClick={() =>
+                            router.push(`/dashboard/notice/${item.id}`)
+                          }
+                        >
+                          <DriveFileRenameOutlineTwoToneIcon />
+                        </IconButton>
+                        <IconButton
+                          edge="end"
+                          color="error"
+                          aria-label="delete"
+                          onClick={() => setToDeleteNoticeId(item.id)}
+                        >
+                          <DeleteOutlineTwoToneIcon />
+                        </IconButton>
+                      </Box>
+                    </React.Fragment>
+                  )
                 }
               >
                 <ListItemButton

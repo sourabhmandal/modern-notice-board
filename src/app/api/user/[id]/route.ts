@@ -1,5 +1,5 @@
 import { TNotificationResponse } from "@/components/utils/api.utils";
-import db from "@/server";
+import { getDb } from "@/server/db";
 import { users } from "@/server/model/auth";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -45,6 +45,7 @@ async function updateUserStatusHandler(
       );
     }
 
+    const db = await getDb();
     const updatedUser = await db
       .update(users)
       .set({ status: status })

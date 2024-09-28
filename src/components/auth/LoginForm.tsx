@@ -1,11 +1,17 @@
 "use client";
 import { startLoginWithCredentials } from "@/app/actions/query/auth";
-import { AUTH_REGISTER } from "@/components";
+import {
+  ADMIN_DASHBOARD,
+  AUTH_REGISTER,
+  DASHBOARD,
+} from "@/components/constants/frontend-routes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import CloseIcon from "@mui/icons-material/Close";
 import LoginIcon from "@mui/icons-material/Login";
 import { Alert, Box, Button, CircularProgress, TextField } from "@mui/material";
-import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { AuthFormWrapper } from "./AuthFormWrapper";
@@ -19,13 +25,36 @@ export function LoginForm() {
     resolver: zodResolver(LoginFormSchema),
   });
 
+  const router = useRouter();
+  const session = useSession();
+
+  useEffect(() => {
+    if (session.data?.user) {
+      if (session.data.user.role === "STUDENT") {
+        return router.replace(DASHBOARD);
+      } else if (session.data.user.role === "ADMIN") {
+        router.replace(ADMIN_DASHBOARD);
+      }
+    }
+  }, [session]);
+
   const [submitCredentialsButtonLoading, setSubmitCredentialsButtonLoading] =
     useState(false);
   // log form state changes
 
   const onSubmit = async (data: LoginFormData) => {
     setSubmitCredentialsButtonLoading(true);
-    await startLoginWithCredentials(data.email, data.password);
+    const loginResponse = await startLoginWithCredentials(
+      data.email,
+      data.password
+    );
+    if (loginResponse.status === "success" && loginResponse.user) {
+      if (loginResponse.user.role === "STUDENT") {
+        return router.replace(DASHBOARD);
+      } else if (loginResponse.user.role === "ADMIN") {
+        router.replace(ADMIN_DASHBOARD);
+      }
+    }
     setSubmitCredentialsButtonLoading(false);
   };
 

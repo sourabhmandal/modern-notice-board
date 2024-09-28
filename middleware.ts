@@ -1,17 +1,18 @@
 import {
+  ADMIN_DASHBOARD,
   apiAuthPrefix,
   AUTH_LOGIN,
   authRoutes,
   DASHBOARD,
   publicRoutes,
-} from "@/components";
-import { ADMIN_DASHBOARD } from "@/components/constants/frontend-routes";
+} from "@/components/constants/frontend-routes";
 import NextAuth from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
-import authConfig from "./auth.config";
+import authConfig from "./src/components/auth/auth.config";
 
 export const { auth } = NextAuth(authConfig);
-export default auth(async function middleware(req: NextRequest) {
+
+export default auth((req: NextRequest) => {
   const isLoggedIn = !!req;
   const { nextUrl } = req;
   console.log("isLoggedIn: ", isLoggedIn, " Path: ", req.nextUrl.pathname);

@@ -1,7 +1,6 @@
-import { AppNavbar, auth, AUTH_LOGIN, DashboardSideMenu } from "@/components";
+import { AppNavbar, DashboardSideMenu } from "@/components";
 import { Box } from "@mui/material";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Student Dashboard",
@@ -13,11 +12,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
-  if (!session?.user) {
-    redirect(AUTH_LOGIN);
-  }
-
   return (
     <Box
       sx={{

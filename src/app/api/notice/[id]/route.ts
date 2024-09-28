@@ -1,5 +1,5 @@
 import { TNotificationResponse } from "@/components/utils/api.utils";
-import db from "@/server";
+import { getDb } from "@/server/db";
 import { attachments, notices } from "@/server/model/notice";
 import { S3Instance } from "@/server/S3";
 import { eq } from "drizzle-orm";
@@ -11,6 +11,7 @@ async function getNoticeByIdHandler(
   { params }: { params: { id: string } }
 ) {
   try {
+    const db = await getDb();
     const { id: noticeId } = params;
     if (noticeId === "undefined" || noticeId === "null") {
       console.log("NOTICE ID :: ", noticeId);
@@ -84,6 +85,7 @@ async function deleteNoticeHandler(
   { params }: { params: { id: string } }
 ) {
   try {
+    const db = await getDb();
     const { id: noticeId } = params;
     if (noticeId === "undefined" || noticeId === "null") {
       console.log("NOTICE ID :: ", noticeId);

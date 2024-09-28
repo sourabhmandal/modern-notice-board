@@ -1,7 +1,7 @@
 "use client";
 
 import type { TCreateNoticeRequest } from "@/app/api/notice/route";
-import { CREATE_NOTICE_API } from "@/components";
+import { CREATE_NOTICE_API } from "@/components/constants/backend-routes";
 import { useToast } from "@/components/data-display/useToast";
 import { NotificationResponse } from "@/components/utils/api.utils";
 import { zodResolver } from "@hookform/resolvers/zod";
