@@ -42,7 +42,7 @@
     "@tiptap/extension-underline": "^2.6.6",
     "@tiptap/html": "^2.6.6",
     "@tiptap/pm": "^2.6.6",
-    "@tiptap/react": "^2.6.6",
+    "@tiptap/react": "^2.7.4",
     "@tiptap/starter-kit": "^2.6.6",
     "@ts-rest/core": "^3.47.0",
     "@ts-rest/open-api": "^3.45.2",
