@@ -1,0 +1,16 @@
+.editorToolTip {
+  display: flex;
+  flex-direction: column; /* Allows the editor to grow with the parent */
+  height: 70vh; /* Full height of the parent container */
+}
+
+.editorContent {
+  border: 1px solid #ccc;
+  border-radius: 0 0 4px 4px;
+  margin: 0px;
+  flex-grow: 1; /* Allows the content area to expand */
+  min-height: 30vh; /* Important for flex items to grow correctly */
+  padding: 0px 10px;
+  font-size: 0.7em;
+  overflow-y: auto; /* Enable vertical scrolling if needed */
+}

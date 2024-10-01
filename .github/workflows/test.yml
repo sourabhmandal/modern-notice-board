@@ -1,0 +1,29 @@
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Run Vitest
+        run: npx vitest --coverage --reporter=junit --outputFile=test-report.xml
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: '**/test-report.xml'
+          check_name: Vitest Tests
+          comment_title: Vitest Test Results
+          github_token: ${{ secrets.GITHUB_TOKEN }}
