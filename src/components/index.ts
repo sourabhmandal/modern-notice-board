@@ -6,7 +6,7 @@ export {
   DASHBOARD,
   LANDING,
   RESOURCES,
-  USERS_LIST,
+  USERS_LIST
 } from "./constants/frontend-routes";
 export { ThemeModeProvider } from "./context/ThemeModeProvider";
 export { AllUserListTable } from "./data-display/AllUserListTable";
@@ -36,3 +36,4 @@ export { LandingPagePricing } from "./section/LandingPagePricing";
 export { LandingPageTestimonials } from "./section/LandingPageTestimonials";
 export { LandinPageFeatures } from "./section/LandinPageFeatures";
 export { LandinPageHero } from "./section/LandinPageHero";
+

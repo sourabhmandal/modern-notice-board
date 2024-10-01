@@ -25,7 +25,6 @@ async function getNoticeByIdHandler(
         }
       );
     }
-
     const data = await db.query.notices.findFirst({
       where: eq(notices.id, noticeId),
       columns: {
@@ -99,7 +98,6 @@ async function deleteNoticeHandler(
         }
       );
     }
-
     await db.delete(notices).where(eq(notices.id, noticeId));
 
     const deletedAllAttachmentRef = await db
