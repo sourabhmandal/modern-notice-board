@@ -41,7 +41,8 @@ import _ from "lodash";
 import css from "./editor.module.css";
 
 import { TCreateNoticeRequest } from "@/app/api/notice/route";
-import { CREATE_NOTICE_API, UploadFilesSection } from "@/components";
+import { UploadFilesSection } from "@/components";
+import { CREATE_NOTICE_API } from "@/components/constants/backend-routes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CircularProgress } from "@mui/material";
 import Placeholder from "@tiptap/extension-placeholder";

@@ -1,5 +1,5 @@
 import { startLoginWithTpp } from "@/app/actions/query/auth";
-import { providerMap } from "@/components";
+import { providerMap } from "@/components/auth/providers.list";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
@@ -85,8 +85,8 @@ export function AuthFormWrapper({
                     startIcon={getIdpIcon(provider.id)}
                     color={getIdpColor(provider.id)}
                     size="large"
-                    onClick={() => {
-                      startLoginWithTpp(provider.id);
+                    onClick={async () => {
+                      await startLoginWithTpp(provider.id);
                     }}
                   >
                     {provider.id.replace("-", " ")}

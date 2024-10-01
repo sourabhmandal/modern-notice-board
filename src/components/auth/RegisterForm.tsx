@@ -1,5 +1,7 @@
 "use client";
-import { AUTH_LOGIN, REGISTER_API, useToast } from "@/components";
+import { registerUser } from "@/app/actions/mutation/auth";
+import { useToast } from "@/components";
+import { AUTH_LOGIN } from "@/components/constants/frontend-routes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
@@ -20,15 +22,18 @@ import {
   TextField,
 } from "@mui/material";
 import { useForm } from "react-hook-form";
-import useSWRMutation from "swr/mutation";
 
 import { z } from "zod";
 import { AuthFormWrapper } from "./AuthFormWrapper";
 
-import { TRegisterRequest } from "@/app/api/auth/register/route";
 import { useEffect, useState } from "react";
-import { sendSwrPostRequest } from "../utils/api.utils";
 import { commonPasswords } from "./commonPasswords";
+
+const registerResponse = z.object({
+  status: z.enum(["success", "error"]),
+  message: z.string(),
+});
+type TRegisterResponse = z.infer<typeof registerResponse>;
 
 export function RegisterForm() {
   const {
@@ -40,60 +45,52 @@ export function RegisterForm() {
   });
   const toaster = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const [registerFormResponse, setRegisterFormResponse] =
+    useState<TRegisterResponse>();
 
-  const {
-    data: registerFormResponse,
-    error: registerFormError,
-    isMutating: submitCredentialsButtonLoading,
-    trigger: registerFormPostApiCall,
-  } = useSWRMutation(REGISTER_API, sendSwrPostRequest<TRegisterRequest>);
+  const [submitCredentialsButtonLoading, setSubmitCredentialsButtonLoading] =
+    useState(false);
 
   const onSubmit = async (data: RegisterFormData) => {
-    registerFormPostApiCall({
-      email: data.email,
-      fullName: data.fullName,
-      password: data.password,
+    setSubmitCredentialsButtonLoading(true);
+    const response = await registerUser({
+      ...data,
       provider: "credentials",
       type: "email",
     });
+    setRegisterFormResponse(response);
+    setSubmitCredentialsButtonLoading(false);
   };
 
   useEffect(() => {
     if (registerFormResponse) {
-      if (registerFormResponse.status < 400) {
-        toaster.showToast(registerFormResponse.message, null, "success");
-      } else {
-        toaster.showToast(registerFormResponse.message, null, "info");
-      }
+      console.log("Register form response:", registerFormResponse);
+      toaster.showToast(
+        registerFormResponse.message,
+        null,
+        registerFormResponse.status
+      );
     }
-
-    if (registerFormError) {
-      toaster.showToast(registerFormError.message, null, "error");
-    }
-  }, [registerFormError, registerFormResponse]);
+  }, [registerFormResponse]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
+      <toaster.ToastComponent />
       <AuthFormWrapper
         headerLabel="Register yourself"
         backButtomLabel="Already have an account?"
         backButtonLink={AUTH_LOGIN}
         showSocial
       >
-        {registerFormResponse &&
-          (parseInt(registerFormResponse.status) < 400 ? (
-            <Alert icon={<CheckIcon fontSize="inherit" />} severity="success">
-              {registerFormResponse.message}
-            </Alert>
-          ) : (
-            <Alert
-              icon={<CloseIcon fontSize="inherit" />}
-              sx={{ width: "100%" }}
-              severity="error"
-            >
-              {registerFormResponse.message}
-            </Alert>
-          ))}
+        {registerFormResponse && (
+          <Alert
+            icon={<CheckIcon fontSize="inherit" />}
+            severity={registerFormResponse.status}
+            sx={{ width: "100%", textAlign: "left" }}
+          >
+            {registerFormResponse.message}
+          </Alert>
+        )}
 
         {errors.root && (
           <Alert icon={<CloseIcon fontSize="inherit" />} severity="error">

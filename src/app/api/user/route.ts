@@ -1,5 +1,5 @@
 import { TNotificationResponse } from "@/components/utils/api.utils";
-import { initializeDb } from "@/server";
+import { getDb } from "@/server/db";
 import { usersSchema } from "@/server/model";
 import { users } from "@/server/model/auth";
 import { and, count, desc, eq, gt, inArray, SQL, sql } from "drizzle-orm";
@@ -31,8 +31,7 @@ async function getAllUserHandler(request: Request) {
   }
 
   try {
-    const db = await initializeDb();
-
+    const db = await getDb();
     // filters
     let filterArr = [];
     if (search.toString().length > 0) {
@@ -47,7 +46,7 @@ async function getAllUserHandler(request: Request) {
       if (filter.toUpperCase() === "OLD") {
         const oneYearAgo = new Date();
         oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-        filterArr.push(gt(usersSchema.emailVerifiedAt, oneYearAgo));
+        filterArr.push(gt(usersSchema.emailVerified, oneYearAgo));
       } else {
         filterSanitized = filter.toUpperCase() as
           | "ACTIVE"
@@ -150,9 +149,10 @@ async function deleteUserHandler(req: Request) {
         }
       );
     }
+    const db = await getDb();
+
     const { userIds } = parsedData.data;
     if (userIds.length !== 0) {
-      const db = await initializeDb();
       const deletedUser = await db
         .delete(users)
         .where(inArray(users.id, userIds))
@@ -207,4 +207,3 @@ export const DeleteUsersRequest = z.object({
 export type TDeleteUsersRequest = z.infer<typeof DeleteUsersRequest>;
 
 export { deleteUserHandler as DELETE, getAllUserHandler as GET };
-

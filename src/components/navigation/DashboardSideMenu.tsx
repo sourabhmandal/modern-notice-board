@@ -13,6 +13,7 @@ const drawerWidth = 240;
 
 export function DashboardSideMenu() {
   const session = useSession();
+  console.log(session.status);
   return (
     <Drawer
       variant="permanent"

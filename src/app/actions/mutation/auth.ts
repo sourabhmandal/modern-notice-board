@@ -1,78 +1,66 @@
-import { initializeDb } from "@/server";
+"use server";
+
+import { getDb } from "@/server/db";
 import { accounts, users } from "@/server/model/auth";
 import { availableIdps } from "@/server/model/common";
 import bcrypt from "bcryptjs";
 import { and, eq } from "drizzle-orm";
-import { NextRequest, NextResponse } from "next/server";
+import { AuthError } from "next-auth";
 import { z } from "zod";
 
-
-export const RegisterRequest = z.object({
-  fullName: z.string().nullable(),
-  email: z.string().email().min(1, {
-    message: "email is required",
-  }),
-  password: z
-    .string()
-    .max(14, {
-      message: "password too long",
-    })
-    .min(8, { message: "Password must be at least 8 characters long" })
-    .regex(/[a-z]/, {
-      message: "Password must contain at least one lowercase letter",
-    })
-    .regex(/[A-Z]/, {
-      message: "Password must contain at least one uppercase letter",
-    })
-    .regex(/\d/, { message: "Password must contain at least one digit" })
-    .regex(/[@$!%*?&]/, {
-      message: "Password must contain at least one special character",
-    })
-    .nullable(),
+const RegisterRequest = z.object({
+  fullName: z.string(),
+  email: z.string(),
+  password: z.string(),
   provider: z.enum([availableIdps[0], ...availableIdps.slice(1)]),
   type: z.enum(["email", "oidc", "oauth", "webauthn"]),
 });
-export type TRegisterRequest = z.infer<typeof RegisterRequest>;
+type TRegisterRequest = z.infer<typeof RegisterRequest>;
 
-async function registerHandler(req: NextRequest) {
-  const reqData = await req.json();
-  const validatedFields = RegisterRequest.safeParse(reqData);
-  if (!validatedFields.success) {
-    console.error(
-      "Invalid fields while validating request:",
-      validatedFields.error.message
-    );
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "Invalid fields",
-      } as TRegisterResponse,
-      {
-        status: 400,
-      }
-    );
-  }
+export async function registerUser(
+  newuser: TRegisterRequest
+): Promise<TRegisterResponse | undefined> {
   try {
+    const validatedFields = RegisterRequest.safeParse(newuser);
+    if (!validatedFields.success) {
+      console.error(
+        "Invalid fields while validating request:",
+        validatedFields.error.message
+      );
+      throw new Error("Invalid fields");
+    }
+
     const data = await checkAndRegisterNewUserWithAccount(validatedFields.data);
-    if (data.status === "error")
-      return NextResponse.json(data, {
-        status: 400,
-      });
-    else if (data.status === "success")
-      return NextResponse.json(data, {
-        status: 201,
-      });
-  } catch (err) {
-    console.error("Error registering user:", err);
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "Error registering user",
-      } as TRegisterResponse,
-      {
-        status: 500,
+    if (data.status === "error") {
+      return data as TRegisterResponse;
+    } else if (data.status === "success") {
+      return {
+        status: "success",
+        message: "User account created successfully",
+      } as TRegisterResponse;
+    }
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          console.error("CredentialsSignin:", error);
+          return {
+            status: "error",
+            message: "Invalid credentials",
+          };
+        default:
+          console.error("AuthError:", error);
+          return {
+            status: "error",
+            message: "Oops! something went wrong in signin",
+          };
       }
-    );
+    }
+    console.error("Error registering user:", error);
+    return {
+      status: "error",
+      message: "Error registering user",
+    } as TRegisterResponse;
   }
 }
 
@@ -80,21 +68,19 @@ export async function checkAndRegisterNewUserWithAccount(
   data: TRegisterRequest
 ): Promise<TRegisterResponse> {
   try {
-    const db = await initializeDb();
-    let user = await db.query.users.findFirst({
-      where: eq(users.email, data.email),
-    });
+    const db = await getDb();
+    let user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, data.email))
+      .then((res) => res[0]);
+    let shouldCreateUser = user ? false : true;
     let shouldCreateAccount = false;
 
-    console.log("User query:");
-
-    if (user) {
+    if (!shouldCreateUser) {
       // check if user account exists
       const userAccount = await db.query.accounts.findFirst({
-        where: and(
-          eq(accounts.userId, user.id),
-          eq(accounts.provider, data.provider)
-        ),
+        where: and(eq(accounts.userId, user.id)),
       });
       console.log("User account:");
 
@@ -127,12 +113,13 @@ export async function checkAndRegisterNewUserWithAccount(
           password: users.password,
           name: users.name,
           image: users.image,
-          emailVerifiedAt: users.emailVerifiedAt,
+          emailVerified: users.emailVerified,
           role: users.role,
-        });
+        })
+        .then((res) => res[0]);
 
-      if (newUser.length > 0) {
-        user = newUser[0];
+      if (newUser) {
+        user = newUser;
         shouldCreateAccount = true;
       }
     }
@@ -171,10 +158,7 @@ export async function checkAndRegisterNewUserWithAccount(
   }
 }
 
-export { registerHandler as POST };
-
 // helpers
-
 const saltAndHashPassword = async (password: string): Promise<string> => {
   try {
     const hash = await bcrypt.hash(password, 10);
@@ -185,7 +169,7 @@ const saltAndHashPassword = async (password: string): Promise<string> => {
   }
 };
 
-export const registerResponse = z.object({
+const registerResponse = z.object({
   status: z.enum(["success", "error"]),
   message: z.string(),
 });

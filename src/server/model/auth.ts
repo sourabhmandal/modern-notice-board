@@ -1,4 +1,4 @@
-import { TAvailableIdps } from "@/components/auth/auth";
+import { TAvailableIdps } from "@/components/auth/providers.list";
 import { relations } from "drizzle-orm";
 import {
   boolean,
@@ -20,7 +20,7 @@ export const users = pgTable("user", {
   name: text("name"),
   email: text("email").unique().notNull(),
   password: text("password"),
-  emailVerifiedAt: timestamp("emailVerified", { mode: "date" }),
+  emailVerified: timestamp("emailVerified", { mode: "date" }),
   status: text("status", { enum: userStatusEnum.enumValues })
     .default("PENDING")
     .notNull(),
