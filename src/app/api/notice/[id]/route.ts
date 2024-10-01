@@ -1,8 +1,7 @@
 import { TNotificationResponse } from "@/components/utils/api.utils";
-import { initializeDb } from "@/server";
+import { getDb } from "@/server/db";
 import { attachments, notices } from "@/server/model/notice";
 import { S3Instance } from "@/server/S3";
-
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -12,6 +11,7 @@ async function getNoticeByIdHandler(
   { params }: { params: { id: string } }
 ) {
   try {
+    const db = await getDb();
     const { id: noticeId } = params;
     if (noticeId === "undefined" || noticeId === "null") {
       console.log("NOTICE ID :: ", noticeId);
@@ -25,7 +25,6 @@ async function getNoticeByIdHandler(
         }
       );
     }
-    const db = await initializeDb();
     const data = await db.query.notices.findFirst({
       where: eq(notices.id, noticeId),
       columns: {
@@ -85,6 +84,7 @@ async function deleteNoticeHandler(
   { params }: { params: { id: string } }
 ) {
   try {
+    const db = await getDb();
     const { id: noticeId } = params;
     if (noticeId === "undefined" || noticeId === "null") {
       console.log("NOTICE ID :: ", noticeId);
@@ -98,7 +98,6 @@ async function deleteNoticeHandler(
         }
       );
     }
-    const db = await initializeDb();
     await db.delete(notices).where(eq(notices.id, noticeId));
 
     const deletedAllAttachmentRef = await db
@@ -106,11 +105,11 @@ async function deleteNoticeHandler(
       .where(eq(attachments.noticeid, noticeId))
       .returning();
 
-      if (deletedAllAttachmentRef.length > 0) {
-        await S3Instance.DeleteFilesByFilePath(
-          deletedAllAttachmentRef.map((attachment) => attachment.filepath)
-        );
-      }
+    if (deletedAllAttachmentRef.length > 0) {
+      await S3Instance.DeleteFilesByFilePath(
+        deletedAllAttachmentRef.map((attachment) => attachment.filepath)
+      );
+    }
 
     return NextResponse.json(
       {

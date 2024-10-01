@@ -1,5 +1,5 @@
 "use client";
-import { AUTH_LOGIN, DASHBOARD } from "@/components";
+import { AUTH_LOGIN, DASHBOARD } from "@/components/constants/frontend-routes";
 import { Box, Button, Typography } from "@mui/material";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation"; // Import the correct module

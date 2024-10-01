@@ -1,4 +1,10 @@
-import { CREATE_NOTICE, DASHBOARD, RESOURCES, USERS_LIST } from "@/components";
+import { DASHBOARD, RESOURCES } from "@/components";
+import {
+  ADMIN_CREATE_NOTICE,
+  ADMIN_DASHBOARD,
+  ADMIN_RESOURCES,
+  ADMIN_USERS_LIST,
+} from "@/components/constants/frontend-routes";
 import AnalyticsRoundedIcon from "@mui/icons-material/AnalyticsRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
@@ -11,18 +17,31 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-const mainListItems = [
-  { text: "Home", icon: <HomeRoundedIcon />, href: DASHBOARD },
-  { text: "Resources", icon: <AnalyticsRoundedIcon />, href: RESOURCES },
-  { text: "Users List", icon: <PeopleRoundedIcon />, href: USERS_LIST },
+
+interface IMenuItem {
+  text: string;
+  icon: JSX.Element;
+  href: string;
+  color?: "primary" | "secondary" | "warning" | "error" | "info" | "success";
+}
+const adminMenuListItems: Array<IMenuItem> = [
+  { text: "Home", icon: <HomeRoundedIcon />, href: ADMIN_DASHBOARD },
+  { text: "Resources", icon: <AnalyticsRoundedIcon />, href: ADMIN_RESOURCES },
+  { text: "Users List", icon: <PeopleRoundedIcon />, href: ADMIN_USERS_LIST },
   {
     text: "Create Notice",
     icon: <AssignmentRoundedIcon />,
-    href: CREATE_NOTICE,
+    href: ADMIN_CREATE_NOTICE,
     color: "warning",
   },
+];
+
+const studentMenuListItems: Array<IMenuItem> = [
+  { text: "Home", icon: <HomeRoundedIcon />, href: DASHBOARD },
+  { text: "Resources", icon: <AnalyticsRoundedIcon />, href: RESOURCES },
 ];
 
 const secondaryListItems = [
@@ -32,6 +51,12 @@ const secondaryListItems = [
 
 export default function MenuContent() {
   const pathname = usePathname();
+  const session = useSession();
+
+  const mainListItems =
+    session.data?.user.role === "ADMIN"
+      ? adminMenuListItems
+      : studentMenuListItems;
 
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>

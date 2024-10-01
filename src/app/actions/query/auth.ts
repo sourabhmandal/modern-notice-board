@@ -1,28 +1,54 @@
 "use server";
 
-import { AUTH_ERROR, DASHBOARD, LANDING, signIn, signOut } from "@/components";
-import { env } from "@/server/env";
+import { auth, signIn, signOut } from "@/components/auth/auth";
+import { LANDING } from "@/components/constants/frontend-routes";
+import { TNotificationResponse } from "@/components/utils/api.utils";
+import { getDb } from "@/server/db";
+import { users } from "@/server/model/auth";
+import { eq } from "drizzle-orm";
 import { AuthError } from "next-auth";
-import { redirect } from "next/navigation";
-
-type ITppProviders = "google" | "facebook" | "github" | "azure-ad" | string;
+type ITppProviders = "google" | "azure-ad" | string;
 
 export async function startLoginWithTpp(provider: ITppProviders) {
-  await signIn(provider, {
-    redirectTo: DASHBOARD,
+  const data = await signIn(provider, {
+    redirect: true,
   });
+
+  const session = await auth();
+  console.log("session", session);
 }
 
 export async function startLoginWithCredentials(
   email: string,
   password: string
-) {
+): Promise<TNotificationResponse & { user?: typeof users.$inferSelect }> {
   try {
+    if (!email || !password) {
+      throw new AuthError("Invalid credentials provided", {
+        name: "InvalidCredentialsError",
+      });
+    }
+    const db = await getDb();
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .then((res) => res[0])
+      .catch((err) => {
+        throw err;
+      });
     await signIn("credentials", {
       email,
       password,
-      redirectTo: DASHBOARD,
+      redirect: false,
     });
+    let userWithoutPassword = user;
+    userWithoutPassword.password = "";
+    return {
+      status: "success",
+      message: "User signed in successfully",
+      user: userWithoutPassword,
+    };
   } catch (error) {
     // Signin can fail for a number of reasons, such as the user
     // not existing, or the user not having the correct role.
@@ -31,16 +57,25 @@ export async function startLoginWithCredentials(
       delete error.stack;
       console.log("AuthError", error);
 
-      return redirect(
-        `${env.NEXT_PUBLIC_API_URL}${AUTH_ERROR}?error=${error.type}&message=${error.name}`
-      );
+      switch (error.type) {
+        case "CredentialsSignin":
+          console.error("CredentialsSignin:", error);
+          return {
+            status: "error",
+            message: "Invalid credentials",
+          };
+        default:
+          console.error("AuthError:", error);
+          return {
+            status: "error",
+            message: "Oops! something went wrong in signin",
+          };
+      }
     }
-
-    // Otherwise if a redirects happens Next.js can handle it
-    // so you can just re-thrown the error and let Next.js handle it.
-    // Docs:
-    // https://nextjs.org/docs/app/api-reference/functions/redirect#server-component
-    throw error;
+    return {
+      status: "error",
+      message: "Oops! unhandled server exception in signin",
+    };
   }
 }
 

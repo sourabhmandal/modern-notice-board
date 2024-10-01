@@ -4,7 +4,7 @@ import {
   TGetAllUsersResponse,
   TUser,
 } from "@/app/api/user/route";
-import { DELETE_USERS_BY_ID_API } from "@/components";
+import { DELETE_USERS_BY_ID_API } from "@/components/constants/backend-routes";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
   Box,
