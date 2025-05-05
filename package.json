@@ -44,7 +44,7 @@
     "@tiptap/html": "^2.10.4",
     "@tiptap/pm": "^2.6.6",
     "@tiptap/react": "^2.7.4",
-    "@tiptap/starter-kit": "^2.10.4",
+    "@tiptap/starter-kit": "^2.11.9",
     "@ts-rest/core": "^3.47.0",
     "@ts-rest/open-api": "^3.45.2",
     "aws-sdk": "^2.1692.0",
