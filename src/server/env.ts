@@ -45,8 +45,6 @@ const envSchema = z.object({
     .default("HS256"),
   AUTH_GOOGLE_ID: z.string(),
   AUTH_GOOGLE_SECRET: z.string(),
-  AUTH_FACEBOOK_ID: z.string(),
-  AUTH_FACEBOOK_SECRET: z.string(),
   NEXT_PUBLIC_API_URL: z.string().url(),
   AIT_AWS_ACCESS_KEY: z.string(),
   AIT_AWS_BUCKET_ID: z.string(),
