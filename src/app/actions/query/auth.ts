@@ -24,9 +24,7 @@ export async function startLoginWithCredentials(
 ): Promise<TNotificationResponse & { user?: typeof users.$inferSelect }> {
   try {
     if (!email || !password) {
-      throw new AuthError("Invalid credentials provided", {
-        name: "InvalidCredentialsError",
-      });
+      throw new AuthError("Invalid credentials provided");
     }
     const db = await getDb();
     const user = await db

@@ -20,7 +20,7 @@ import Stack from "@mui/material/Stack";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
+import { JSX } from "react";
 interface IMenuItem {
   text: string;
   icon: JSX.Element;

@@ -1,4 +1,3 @@
-import { checkAndRegisterNewUserWithAccount } from "@/app/api/auth/register/route";
 import { providers, TAvailableIdps } from "@/components/auth/providers.list";
 import { Account, NextAuthConfig, Profile, User } from "next-auth";
 import { AdapterUser } from "next-auth/adapters";
@@ -33,6 +32,14 @@ export default {
       return session;
     },
     signIn: async ({ account, profile }: ISignInParams) => {
+      if (profile?.email && account?.provider === "google") {
+        return Boolean(
+          profile?.email_verified && profile?.email?.endsWith("@gmail.com")
+        );
+      }
+      if (profile?.email && account?.provider === "facebook") {
+        return Boolean(profile?.email_verified);
+      }
       if (profile?.email) {
         // No user found, so this is their first attempt to login
         // meaning this is also the place you could do registration
@@ -40,18 +47,7 @@ export default {
           email: profile.email,
           provider: account?.provider as TAvailableIdps,
           fullName: profile.name ?? "",
-          password: "",
-          type: "oauth",
         });
-      }
-
-      if (account?.provider === "google") {
-        return Boolean(
-          profile?.email_verified && profile?.email?.endsWith("@gmail.com")
-        );
-      }
-      if (account?.provider === "facebook") {
-        return Boolean(profile?.email_verified);
       }
       return true;
     },
@@ -63,3 +59,13 @@ export default {
     error: "/auth/error",
   },
 } as NextAuthConfig;
+
+function checkAndRegisterNewUserWithAccount({
+  email,
+  provider,
+  fullName,
+}: {
+  email: string;
+  provider: TAvailableIdps;
+  fullName: string;
+}) {}

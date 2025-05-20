@@ -1,6 +1,6 @@
 "use client";
-import { TGetNoticeResponse } from "@/app/api/notice/[id]/route";
-import { GetAllNoticeResponse } from "@/app/api/notice/route";
+import { TGetNoticeResponse } from "@/app/api/notice/[id]/validate";
+import { GetAllNoticeResponse } from "@/app/api/notice/validate";
 import { useToast, ViewNoticeDialog } from "@/components";
 import { GET_ALL_NOTICE_API } from "@/components/constants/backend-routes";
 import { DeleteNoticeDialog } from "@/components/popovers/DeleteNoticeDialog";

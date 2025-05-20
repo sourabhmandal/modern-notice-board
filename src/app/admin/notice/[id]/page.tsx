@@ -1,19 +1,18 @@
 "use client";
-import { GetNoticeResponse } from "@/app/api/notice/[id]/route";
-import {
-  DashboardMainContent,
-  GET_NOTICE_BY_ID_API,
-  NoticeEditorMui,
-  useToast,
-} from "@/components";
+import { GetNoticeResponse } from "@/app/api/notice/[id]/validate";
+import { DashboardMainContent, NoticeEditorMui, useToast } from "@/components";
+import { GET_NOTICE_BY_ID_API } from "@/components/constants/backend-routes";
 import { Box, CircularProgress, Typography } from "@mui/material";
+import { useRouter } from "next/router";
 import useSWR from "swr";
-export default function DashboardPage({ params }: { params: { id: string } }) {
+
+export default function DashboardPage() {
+  const router = useRouter();
   const {
     data: NoticesResponse,
     error: NoticesError,
     isLoading: isNoticeByIdLoading,
-  } = useSWR(GET_NOTICE_BY_ID_API(params.id));
+  } = useSWR(GET_NOTICE_BY_ID_API(router.query.id as string));
   const toast = useToast();
   if (isNoticeByIdLoading) {
     return (
@@ -35,7 +34,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
   if (NoticesError) {
     toast.showToast(
       "Error fetching notice details",
-      `notice of id ${params.id} not loaded due to server error`,
+      `notice of id ${router.query.id} not loaded due to server error`,
       "error"
     );
   }
@@ -52,7 +51,7 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     >
       <NoticeEditorMui
         mode={"update"}
-        noticeId={params.id}
+        noticeId={router.query.id as string}
         noticeTitle={noticeDetails.title}
         files={noticeDetails.files}
         isPublished={noticeDetails.isPublished}

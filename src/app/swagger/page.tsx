@@ -8,7 +8,7 @@ import "swagger-ui-react/swagger-ui.css";
 
 import { OpenAPIV1 } from "@/app/api/v1/_open_api/_openapi";
 
-export const OpenApiDocsPage = () => {
+export default function OpenApiDocsPage() {
   const theme = useTheme();
 
   useEffect(() => {
@@ -27,5 +27,3 @@ export const OpenApiDocsPage = () => {
 
   return <SwaggerUI spec={OpenAPIV1} displayOperationId={true} />;
 };
-
-export default OpenApiDocsPage;

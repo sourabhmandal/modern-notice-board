@@ -83,6 +83,7 @@ export function LoginForm() {
           </Box>
           {providerMap.map((provider, idx) => (
             <Button
+              key={`${provider.name}-${idx}`}
               variant="outlined"
               fullWidth
               startIcon={getIdpIcon(provider.id)}

@@ -6,14 +6,12 @@ interface LinkBubbleMenuProps {
   editor: Editor | null;
 }
 export const LinkBubbleMenu = ({ editor }: LinkBubbleMenuProps) => {
-  if (!editor) return null;
-
   const [url, setUrl] = useState("");
 
   const handleInsertLink = useCallback(() => {
     if (url) {
       editor
-        .chain()
+        ?.chain()
         .focus()
         .extendMarkRange("link")
         .setLink({ href: url })
@@ -23,9 +21,11 @@ export const LinkBubbleMenu = ({ editor }: LinkBubbleMenuProps) => {
   }, [editor, url]);
 
   const handleRemoveLink = useCallback(() => {
-    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    editor?.chain().focus().extendMarkRange("link").unsetLink().run();
     setUrl("");
   }, [editor]);
+
+  if (!editor) return null;
 
   return (
     <BubbleMenu

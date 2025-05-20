@@ -1,6 +1,6 @@
 "use client";
 
-import type { TCreateNoticeRequest } from "@/app/api/notice/route";
+import type { TCreateNoticeRequest } from "@/app/api/notice/validate";
 import { CREATE_NOTICE_API } from "@/components/constants/backend-routes";
 import { useToast } from "@/components/data-display/useToast";
 import { NotificationResponse } from "@/components/utils/api.utils";

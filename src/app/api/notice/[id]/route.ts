@@ -1,18 +1,31 @@
+import {
+  NoticeIDPathParams,
+  TGetNoticeResponse,
+} from "@/app/api/notice/[id]/validate";
 import { TNotificationResponse } from "@/components/utils/api.utils";
 import { getDb } from "@/server/db";
 import { attachments, notices } from "@/server/model/notice";
 import { S3Instance } from "@/server/S3";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
-async function getNoticeByIdHandler(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+async function getNoticeByIdHandler(req: Request, context: any) {
   try {
     const db = await getDb();
-    const { id: noticeId } = params;
+    const result = NoticeIDPathParams.safeParse(context.params);
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "Invalid ID param",
+          errors: result.error.flatten(),
+        },
+        { status: 400 }
+      );
+    }
+
+    const { id: noticeId } = result.data;
+
     if (noticeId === "undefined" || noticeId === "null") {
       console.log("NOTICE ID :: ", noticeId);
       return NextResponse.json(
@@ -70,7 +83,7 @@ async function getNoticeByIdHandler(
     return NextResponse.json(
       {
         status: "error",
-        message: `notice with id (${params.id}) unsuccessful due to server error`,
+        message: `notice with id (${context.params.id}) unsuccessful due to server error`,
       } as TNotificationResponse,
       {
         status: 500,
@@ -79,13 +92,21 @@ async function getNoticeByIdHandler(
   }
 }
 
-async function deleteNoticeHandler(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+async function deleteNoticeHandler(req: Request, context: any) {
   try {
     const db = await getDb();
-    const { id: noticeId } = params;
+    const result = NoticeIDPathParams.safeParse(context.params);
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "Invalid ID param",
+          errors: result.error.flatten(),
+        },
+        { status: 400 }
+      );
+    }
+    const { id: noticeId } = result.data;
     if (noticeId === "undefined" || noticeId === "null") {
       console.log("NOTICE ID :: ", noticeId);
       return NextResponse.json(
@@ -133,27 +154,5 @@ async function deleteNoticeHandler(
     );
   }
 }
-
-export const GetNoticeResponse = z.object({
-  id: z.string().uuid(),
-  title: z.string(),
-  adminEmail: z.string().email(),
-  content: z.coerce.string(),
-  contentHtml: z.coerce.string().optional(),
-  isPublished: z.boolean(),
-  files: z
-    .array(
-      z.object({
-        filename: z.string(),
-        download: z.string(),
-        filepath: z.string(),
-        filetype: z.string(),
-      })
-    )
-    .default([]),
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date(),
-});
-export type TGetNoticeResponse = z.infer<typeof GetNoticeResponse>;
 
 export { deleteNoticeHandler as DELETE, getNoticeByIdHandler as GET };

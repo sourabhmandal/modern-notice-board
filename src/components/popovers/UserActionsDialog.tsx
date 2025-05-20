@@ -3,7 +3,7 @@ import {
   TDeleteUsersRequest,
   TGetAllUsersResponse,
   TUser,
-} from "@/app/api/user/route";
+} from "@/app/api/user/validate";
 import { DELETE_USERS_BY_ID_API } from "@/components/constants/backend-routes";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
@@ -122,7 +122,7 @@ export function UserActionsDialog({
           {selectedUserIds.map((id) => {
             const selectedUser = userList.find((user) => user.id === id);
             return (
-              <Box>
+              <Box key={`${selectedUser?.id}-${id}`}>
                 <Typography
                   variant="body1"
                   sx={{

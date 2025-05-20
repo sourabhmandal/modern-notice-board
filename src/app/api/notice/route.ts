@@ -1,10 +1,12 @@
+import {
+  CreateNoticeRequest,
+  TGetAllNoticeResponse,
+} from "@/app/api/notice/validate";
 import { TNotificationResponse } from "@/components/utils/api.utils";
 import { getDb } from "@/server/db";
 import { notices } from "@/server/model/notice";
 import { count, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { GetNoticeResponse } from "./[id]/route";
 
 async function createNoticeHandler(request: Request) {
   try {
@@ -138,21 +140,5 @@ async function getAllNoticeHandler(request: Request) {
     );
   }
 }
-
-export const CreateNoticeRequest = z.object({
-  id: z.string().uuid(),
-  title: z.string(),
-  content: z.string(),
-  contentHtml: z.string().optional(),
-  isPublished: z.boolean(),
-  adminEmail: z.string().email(),
-});
-export type TCreateNoticeRequest = z.infer<typeof CreateNoticeRequest>;
-
-export const GetAllNoticeResponse = z.object({
-  notices: z.array(GetNoticeResponse),
-  totalCount: z.number().default(0),
-});
-export type TGetAllNoticeResponse = z.infer<typeof GetAllNoticeResponse>;
 
 export { getAllNoticeHandler as GET, createNoticeHandler as POST };

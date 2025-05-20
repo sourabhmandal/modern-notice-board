@@ -2,7 +2,8 @@
 import {
   GetNoticeResponse,
   TGetNoticeResponse,
-} from "@/app/api/notice/[id]/route";
+} from "@/app/api/notice/[id]/validate";
+import { GET_NOTICE_BY_ID_API } from "@/components/constants/backend-routes";
 import CloseIcon from "@mui/icons-material/Close";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ImageIcon from "@mui/icons-material/Image";
@@ -23,7 +24,6 @@ import {
 import { TransitionProps } from "@mui/material/transitions";
 import { forwardRef, SetStateAction, useEffect, useState } from "react";
 import useSWR from "swr";
-import { GET_NOTICE_BY_ID_API } from "../constants/backend-routes";
 import { SafeHtml } from "../data-display/SafeHtml";
 import { useToast } from "../data-display/useToast";
 import { NotificationResponse } from "../utils/api.utils";

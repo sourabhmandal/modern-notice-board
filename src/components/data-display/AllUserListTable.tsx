@@ -3,7 +3,7 @@ import {
   GetAllUsersResponse,
   TGetAllUsersResponse,
   TUser,
-} from "@/app/api/user/route";
+} from "@/app/api/user/validate";
 import { UserActionsDialog, useToast } from "@/components";
 import {
   GET_ALL_USER_API,

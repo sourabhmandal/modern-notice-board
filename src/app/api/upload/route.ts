@@ -1,10 +1,13 @@
+import {
+  DeleteFileRequest,
+  TUploadFileResponse,
+} from "@/app/api/upload/validate";
 import { TNotificationResponse } from "@/components/utils/api.utils";
 import { getDb } from "@/server/db";
 import { attachments, TInsertAttachmentSchema } from "@/server/model/notice";
 import { S3Instance } from "@/server/S3";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 
 async function uploadFileHandler(req: NextRequest) {
   try {
@@ -194,21 +197,3 @@ async function deleteUploadedFileHandler(req: NextRequest) {
 }
 
 export { deleteUploadedFileHandler as DELETE, uploadFileHandler as POST };
-
-export const DeleteFileRequest = z.object({
-  file_path: z.string(),
-});
-
-export const UploadFileResponse = z.object({
-  uploads: z.array(
-    z.object({
-      filename: z.string(),
-      download: z.string(),
-      filetype: z.string(),
-      filepath: z.string(),
-    })
-  ),
-  uploadedFilesCount: z.number(),
-  totalFilesCount: z.number(),
-});
-export type TUploadFileResponse = z.infer<typeof UploadFileResponse>;

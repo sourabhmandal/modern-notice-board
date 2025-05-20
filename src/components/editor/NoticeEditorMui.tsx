@@ -40,7 +40,7 @@ import Underline from "@tiptap/extension-underline";
 import _ from "lodash";
 import css from "./editor.module.css";
 
-import { TCreateNoticeRequest } from "@/app/api/notice/route";
+import { TCreateNoticeRequest } from "@/app/api/notice/validate";
 import { UploadFilesSection } from "@/components";
 import { CREATE_NOTICE_API } from "@/components/constants/backend-routes";
 import { zodResolver } from "@hookform/resolvers/zod";

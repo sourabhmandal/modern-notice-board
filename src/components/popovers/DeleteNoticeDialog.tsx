@@ -1,5 +1,5 @@
 "use client";
-import { TGetNoticeResponse } from "@/app/api/notice/[id]/route";
+import { TGetNoticeResponse } from "@/app/api/notice/[id]/validate";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
   Button,

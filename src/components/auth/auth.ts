@@ -1,4 +1,3 @@
-import { checkAndRegisterNewUserWithAccount } from "@/app/actions/mutation/auth";
 import authConfig from "@/components/auth/auth.config";
 import { getDb } from "@/server/db";
 import {
@@ -10,7 +9,6 @@ import {
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import NextAuth, { Account, Profile, User } from "next-auth";
 import { AdapterUser } from "next-auth/adapters";
-import { TAvailableIdps } from "./providers.list";
 
 interface ISignInParams {
   user: User | AdapterUser;
@@ -58,12 +56,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (profile?.email) {
         // No user found, so this is their first attempt to login
         // meaning this is also the place you could do registration
-        await checkAndRegisterNewUserWithAccount({
-          email: profile.email,
-          provider: account?.provider as TAvailableIdps,
-          fullName: profile.name ?? "",
-          type: "oauth",
-        });
+        // await checkAndRegisterNewUserWithAccount({
+        //   email: profile.email,
+        //   provider: account?.provider as TAvailableIdps,
+        //   fullName: profile.name ?? "",
+        //   type: "oauth",
+        // });
       }
 
       // if (account?.provider === "google") {

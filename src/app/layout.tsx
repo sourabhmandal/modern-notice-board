@@ -1,9 +1,9 @@
 import { SWRProvider, ThemeModeProvider } from "@/components";
-import { SessionProvider } from "next-auth/react";
-
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
+import { SessionProvider } from "next-auth/react";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "NextJS Template",
@@ -21,7 +21,9 @@ export default function RootLayout({
         <SWRProvider>
           <AppRouterCacheProvider options={{ enableCssLayer: true }}>
             <ThemeModeProvider>
-              <SessionProvider>{children}</SessionProvider>
+              <Suspense>
+                <SessionProvider>{children}</SessionProvider>
+              </Suspense>
             </ThemeModeProvider>
           </AppRouterCacheProvider>
         </SWRProvider>

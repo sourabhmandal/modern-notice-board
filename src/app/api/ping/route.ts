@@ -1,8 +1,7 @@
 import { auth } from "@/components/auth/auth";
-import { NextApiRequest } from "next";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-async function helloHandler(request: NextApiRequest) {
+async function helloHandler(request: NextRequest) {
   const session = await auth();
 
   return NextResponse.json(

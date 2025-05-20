@@ -1,10 +1,14 @@
+import {
+  DeleteUsersRequest,
+  TGetAllUsersResponse,
+  TUser,
+} from "@/app/api/user/validate";
 import { TNotificationResponse } from "@/components/utils/api.utils";
 import { getDb } from "@/server/db";
 import { usersSchema } from "@/server/model";
 import { users } from "@/server/model/auth";
 import { and, count, desc, eq, gt, inArray, SQL, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
 type TUserTableName = "active" | "pending" | "rejected" | "old" | "none";
 
@@ -183,27 +187,5 @@ async function deleteUserHandler(req: Request) {
     );
   }
 }
-
-export const User = z.object({
-  id: z.string().uuid(),
-  name: z.string().optional().nullable(),
-  email: z.string().email(),
-  emailVerifiedAt: z.coerce.date().optional(),
-  status: z.enum(["ACTIVE", "PENDING", "REJECTED"]).default("PENDING"),
-  image: z.string().optional().nullable(),
-  role: z.enum(["ADMIN", "STUDENT"]).default("STUDENT"),
-});
-export type TUser = z.infer<typeof User>;
-
-export const GetAllUsersResponse = z.object({
-  users: z.array(User),
-  totalCount: z.number().default(0),
-});
-export type TGetAllUsersResponse = z.infer<typeof GetAllUsersResponse>;
-
-export const DeleteUsersRequest = z.object({
-  userIds: z.array(z.string().uuid()),
-});
-export type TDeleteUsersRequest = z.infer<typeof DeleteUsersRequest>;
 
 export { deleteUserHandler as DELETE, getAllUserHandler as GET };

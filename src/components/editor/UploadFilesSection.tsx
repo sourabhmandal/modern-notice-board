@@ -1,5 +1,5 @@
 "use client";
-import { UploadFileResponse } from "@/app/api/upload/route";
+import { UploadFileResponse } from "@/app/api/upload/validate";
 import CloseIcon from "@mui/icons-material/Close";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import {

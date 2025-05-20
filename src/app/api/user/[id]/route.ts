@@ -1,15 +1,25 @@
+import { NoticeIDPathParams } from "@/app/api/notice/[id]/validate";
 import { TNotificationResponse } from "@/components/utils/api.utils";
 import { getDb } from "@/server/db";
 import { users } from "@/server/model/auth";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-async function updateUserStatusHandler(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+async function updateUserStatusHandler(request: Request, context: any) {
   try {
-    const { id: userId } = params;
+    const result = NoticeIDPathParams.safeParse(context.params);
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "Invalid ID param",
+          errors: result.error.flatten(),
+        },
+        { status: 400 }
+      );
+    }
+    const { id: userId } = result.data;
+
     const reqBody = await request.json();
 
     if (
