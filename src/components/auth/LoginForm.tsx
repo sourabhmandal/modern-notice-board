@@ -1,30 +1,20 @@
 "use client";
-import { startLoginWithCredentials } from "@/app/actions/query/auth";
+import { startLoginWithTpp } from "@/app/actions/query/auth";
+import { providerMap } from "@/components/auth/providers.list";
 import {
   ADMIN_DASHBOARD,
-  AUTH_REGISTER,
   DASHBOARD,
 } from "@/components/constants/frontend-routes";
-import { zodResolver } from "@hookform/resolvers/zod";
-import CloseIcon from "@mui/icons-material/Close";
-import LoginIcon from "@mui/icons-material/Login";
-import { Alert, Box, Button, CircularProgress, TextField } from "@mui/material";
+import FacebookIcon from "@mui/icons-material/Facebook";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import GoogleIcon from "@mui/icons-material/Google";
+import MicrosoftIcon from "@mui/icons-material/Microsoft";
+import { Box, Button, Paper, Stack, Typography } from "@mui/material";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { AuthFormWrapper } from "./AuthFormWrapper";
+import { useEffect } from "react";
 
 export function LoginForm() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(LoginFormSchema),
-  });
-
   const router = useRouter();
   const session = useSession();
 
@@ -38,102 +28,75 @@ export function LoginForm() {
     }
   }, [session]);
 
-  const [submitCredentialsButtonLoading, setSubmitCredentialsButtonLoading] =
-    useState(false);
-  // log form state changes
-
-  const onSubmit = async (data: LoginFormData) => {
-    setSubmitCredentialsButtonLoading(true);
-    const loginResponse = await startLoginWithCredentials(
-      data.email,
-      data.password
-    );
-    if (loginResponse.status === "success" && loginResponse.user) {
-      if (loginResponse.user.role === "STUDENT") {
-        return router.replace(DASHBOARD);
-      } else if (loginResponse.user.role === "ADMIN") {
-        router.replace(ADMIN_DASHBOARD);
-      }
+  function getIdpColor(provider: string) {
+    switch (provider) {
+      case "google":
+        return "error";
+      case "facebook":
+        return "info";
+      case "github":
+        return "secondary";
+      case "azure-ad":
+        return "primary";
+      default:
+        return "secondary";
     }
-    setSubmitCredentialsButtonLoading(false);
-  };
+  }
+
+  function getIdpIcon(provider: string) {
+    switch (provider) {
+      case "google":
+        return <GoogleIcon />;
+      case "facebook":
+        return <FacebookIcon />;
+      case "github":
+        return <GitHubIcon />;
+      case "azure-ad":
+        return <MicrosoftIcon />;
+      default:
+        return <GitHubIcon />;
+    }
+  }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <AuthFormWrapper
-        headerLabel="Login yourself"
-        backButtomLabel="Dont have an account yet?"
-        backButtonLink={AUTH_REGISTER}
-        showSocial
-      >
-        {errors.root && (
-          <Alert icon={<CloseIcon fontSize="inherit" />} severity="error">
-            {errors.root.message}
-          </Alert>
-        )}
-
-        <Box width="100%">
-          <TextField
-            type="email"
-            variant="filled"
-            fullWidth
-            placeholder="Email"
-            label="Email"
-            required
-            {...register("email", { valueAsNumber: false, required: true })}
-          />
-          {errors.email && (
-            <Alert icon={<CloseIcon fontSize="inherit" />} severity="error">
-              {errors.email.message}
-            </Alert>
-          )}
-        </Box>
-        <Box width="100%">
-          <TextField
-            type="password"
-            variant="filled"
-            fullWidth
-            placeholder="Password"
-            label="Password"
-            required
-            {...register("password", { valueAsNumber: false, required: true })}
-          />
-          {errors.password && (
-            <Alert icon={<CloseIcon fontSize="inherit" />} severity="error">
-              {errors.password.message}
-            </Alert>
-          )}
-        </Box>
-        <Button
-          disabled={submitCredentialsButtonLoading}
-          startIcon={
-            submitCredentialsButtonLoading ? (
-              <CircularProgress size={16} />
-            ) : (
-              <LoginIcon />
-            )
-          }
-          size="large"
-          type="submit"
-          fullWidth
-          variant="contained"
+    <Box
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+      height="100vh"
+    >
+      <Paper elevation={3} sx={{ paddingX: 4, paddingY: 6 }}>
+        <Stack
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          gap={2}
+          width={500}
         >
-          Submit
-        </Button>
-      </AuthFormWrapper>
-    </form>
+          <Box>
+            <Typography variant="h4">Authenticate</Typography>
+            <Typography variant="h6" textAlign="center">
+              Login yourself
+            </Typography>
+          </Box>
+          {providerMap.map((provider, idx) => (
+            <Button
+              variant="outlined"
+              fullWidth
+              startIcon={getIdpIcon(provider.id)}
+              color={getIdpColor(provider.id)}
+              size="large"
+              onClick={async () => {
+                await startLoginWithTpp(provider.id);
+              }}
+            >
+              {provider.id.replace("-", " ")}
+            </Button>
+          ))}
+        </Stack>
+      </Paper>
+    </Box>
   );
 }
-
-export const LoginFormSchema = z.object({
-  email: z.string().email().min(1, {
-    message: "email is required",
-  }),
-  password: z.string().min(1, {
-    message: "password is required",
-  }),
-});
-
-type LoginFormData = z.infer<typeof LoginFormSchema>;
-
-export type ValidFieldNames = "email" | "password";

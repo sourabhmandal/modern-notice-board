@@ -63,6 +63,7 @@
     "next-transpile-modules": "^10.0.1",
     "npm": "^10.9.0",
     "pg": "^8.13.1",
+    "postgres": "^3.4.5",
     "react": "^18",
     "react-dom": "^18",
     "react-dropzone": "^14.2.3",

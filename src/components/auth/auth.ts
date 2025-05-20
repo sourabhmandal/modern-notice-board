@@ -10,18 +10,15 @@ import {
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import NextAuth, { Account, Profile, User } from "next-auth";
 import { AdapterUser } from "next-auth/adapters";
-import { CredentialInput } from "next-auth/providers/credentials";
-import { ADMIN_DASHBOARD, DASHBOARD } from "../constants/frontend-routes";
 import { TAvailableIdps } from "./providers.list";
 
 interface ISignInParams {
   user: User | AdapterUser;
-  account: Account | null;
+  account?: Account | null;
   profile?: Profile;
   email?: {
     verificationRequest?: boolean;
   };
-  credentials?: Record<string, CredentialInput>;
 }
 
 const dbInst = await getDb();
@@ -61,11 +58,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (profile?.email) {
         // No user found, so this is their first attempt to login
         // meaning this is also the place you could do registration
-        checkAndRegisterNewUserWithAccount({
+        await checkAndRegisterNewUserWithAccount({
           email: profile.email,
           provider: account?.provider as TAvailableIdps,
           fullName: profile.name ?? "",
-          password: "",
           type: "oauth",
         });
       }
@@ -79,7 +75,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       //   return Boolean(profile?.email_verified);
       // }
       return true;
-      return user.role === "ADMIN" ? ADMIN_DASHBOARD : DASHBOARD;
+      // return user.role === "ADMIN" ? ADMIN_DASHBOARD : DASHBOARD;
     },
   },
   secret: process.env.JWT_SECRET_KEY,

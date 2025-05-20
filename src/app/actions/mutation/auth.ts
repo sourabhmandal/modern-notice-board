@@ -11,7 +11,6 @@ import { z } from "zod";
 const RegisterRequest = z.object({
   fullName: z.string(),
   email: z.string(),
-  password: z.string(),
   provider: z.enum([availableIdps[0], ...availableIdps.slice(1)]),
   type: z.enum(["email", "oidc", "oauth", "webauthn"]),
 });
@@ -101,9 +100,6 @@ export async function checkAndRegisterNewUserWithAccount(
         .insert(users)
         .values({
           email: data.email,
-          password: data.password
-            ? await saltAndHashPassword(data.password)
-            : null,
           status: "PENDING",
         })
         .returning({
