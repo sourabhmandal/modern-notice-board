@@ -14,7 +14,7 @@ import Typography from "@mui/material/Typography";
 import * as React from "react";
 
 const logoStyle = {
-  width: "140px",
+  width: "40px",
   height: "auto",
   cursor: "pointer",
 };
@@ -85,21 +85,11 @@ export function LandingPageAppBar() {
               }}
             >
               <img
-                src={
-                  "https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/61f12e6faf73568658154dae_SitemarkDefault.svg"
-                }
+                src={"/static/images/ait/ait-logo.png"}
                 style={logoStyle}
-                alt="logo of sitemark"
+                alt="logo of aitpune"
               />
               <Box sx={{ display: { xs: "none", md: "flex" } }}>
-                <MenuItem
-                  onClick={() => scrollToSection("features")}
-                  sx={{ py: "6px", px: "12px" }}
-                >
-                  <Typography variant="body2" color="text.primary">
-                    Features
-                  </Typography>
-                </MenuItem>
                 <MenuItem
                   onClick={() => scrollToSection("testimonials")}
                   sx={{ py: "6px", px: "12px" }}
@@ -114,14 +104,6 @@ export function LandingPageAppBar() {
                 >
                   <Typography variant="body2" color="text.primary">
                     Highlights
-                  </Typography>
-                </MenuItem>
-                <MenuItem
-                  onClick={() => scrollToSection("pricing")}
-                  sx={{ py: "6px", px: "12px" }}
-                >
-                  <Typography variant="body2" color="text.primary">
-                    Pricing
                   </Typography>
                 </MenuItem>
                 <MenuItem

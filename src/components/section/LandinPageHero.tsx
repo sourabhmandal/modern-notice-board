@@ -3,7 +3,6 @@ import { alpha, useTheme } from "@mui/material";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
-import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
@@ -43,7 +42,7 @@ export function LandinPageHero() {
               fontSize: "clamp(3.5rem, 10vw, 4rem)",
             }}
           >
-            Our latest&nbsp;
+            Welcome to&nbsp;
             <Typography
               component="span"
               variant="h1"
@@ -55,7 +54,7 @@ export function LandinPageHero() {
                     : "primary.light",
               }}
             >
-              products
+              AIT Placements
             </Typography>
           </Typography>
           <Typography
@@ -63,9 +62,10 @@ export function LandinPageHero() {
             color="text.secondary"
             sx={{ alignSelf: "center", width: { sm: "100%", md: "80%" } }}
           >
-            Explore our cutting-edge dashboard, delivering high-quality
-            solutions tailored to your needs. Elevate your experience with
-            top-tier features and services.
+            Over the years, Our students have gone on to work in various
+            industries, including software development, data science, and
+            artificial intelligence. AIT Placement Cell has a proven track
+            record of finding right jobs for our students.
           </Typography>
           <Stack
             direction={{ xs: "column", sm: "row" }}
@@ -87,20 +87,9 @@ export function LandinPageHero() {
               }}
             />
             <Button variant="contained" color="primary">
-              Start now
+              Submit
             </Button>
           </Stack>
-          <Typography
-            variant="caption"
-            textAlign="center"
-            sx={{ opacity: 0.8 }}
-          >
-            By clicking &quot;Start now&quot; you agree to our&nbsp;
-            <Link href="#" color="primary">
-              Terms & Conditions
-            </Link>
-            .
-          </Typography>
         </Stack>
         <Box
           id="image"
@@ -111,8 +100,8 @@ export function LandinPageHero() {
             width: "100%",
             backgroundImage:
               theme.palette.mode === "light"
-                ? 'url("/static/images/templates-images/dashboard.jpg")'
-                : 'url("/static/images/templates-images/dashboard-dark.jpg")',
+                ? 'url("/static/images/ait/ait-landscape.jpg")'
+                : 'url("/static/images/ait/ait-landscape.jpg")',
             backgroundSize: "cover",
             borderRadius: "10px",
             outline: "1px solid",

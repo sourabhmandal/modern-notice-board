@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16
+    container_name: aitplacements-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aitplacements
+      POSTGRES_USER: aitplacements
+      POSTGRES_PASSWORD: aitplacements
+    ports:
+      - "5433:5432"
+    volumes:
+      - aitplacements-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aitplacements"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  aitplacements-pg-data:
